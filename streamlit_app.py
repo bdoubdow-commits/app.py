@@ -145,7 +145,8 @@ h1 { color: #d4af37; text-align: center; font-family: 'serif'; }
 """, unsafe_allow_html=True)
 
 st.title("🔮 THE DESTINY")
-st.write("計算された差異が、真の宿命を炙り出す。")
+# --- サブタイトルを神秘的に修正 ---
+st.write("運命の波形が、隠されたあなたの本質を炙り出す。")
 st.markdown('<p class="once-notice">⚠️ 1日1度、1回目の判定が本物です。<br>2回目、3回目とズレてしまいますのでご注意ください。</p>', unsafe_allow_html=True)
 
 with st.container():
@@ -172,7 +173,6 @@ with st.container():
 
 # --- 3. 解析ロジック ---
 if predict_button:
-    # サーバーの時刻ズレを防ぐため日本時間（JST）で取得
     JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
     now = datetime.datetime.now(JST)
 
