@@ -1,10 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
 import datetime
-import json
-import os
-import hashlib
-import random
 from collections import Counter
 
 # --- ページ設定 ---
@@ -108,7 +104,8 @@ def get_numeric_value(text, stroke_dict):
 # --- 2. UI構築 ---
 st.markdown("""
 <style>
-h1 { color: #d4af37; text-align: center; font-family: 'serif'; }
+h1 { color: #d4af37; text-align: center; font-family: 'serif'; margin-bottom: 5px; }
+.sub-title { text-align: center; color: #eeeeee; font-size: 1.05em; font-family: 'serif'; margin-bottom: 25px; letter-spacing: 0.05em; }
 .once-notice { color: #d4af37; font-size: 0.9em; text-align: center; margin-top: 4px; letter-spacing: 0.05em; font-weight: bold;}
 .detail-text { color: #444; font-size: 0.95em; line-height: 1.6; padding-bottom: 8px; }
 .detail-label { color: #d4af37; font-weight: bold; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; margin-top: 12px; }
@@ -117,14 +114,14 @@ h1 { color: #d4af37; text-align: center; font-family: 'serif'; }
 """, unsafe_allow_html=True)
 
 st.title("🔮 THE DESTINY")
-st.write("運命の波形が、隠されたあなたの本質を炙り出す。")
+# センター寄せのサブタイトル
+st.markdown("<p class='sub-title'>運命の波形が、隠されたあなたの本質を炙り出す。</p>", unsafe_allow_html=True)
 st.markdown('<p class="once-notice">⚠️ 1日1度、1回目の判定が本物です。<br>2回目、3回目とズレてしまいますのでご注意ください。</p>', unsafe_allow_html=True)
 
 with st.container():
     st.subheader("【基本情報】")
     col1, col2 = st.columns(2)
     with col1:
-        # ラベルをスッキリと変更
         last_name = st.text_input("姓", placeholder="例：山田")
         first_name = st.text_input("名", placeholder="例：太郎")
     with col2:
@@ -149,7 +146,7 @@ if predict_button:
     now = datetime.datetime.now(JST)
 
     # ---------------------------------------------------------
-    # ① 本来の宿命（ベース）のハッシュ生成とカウント
+    # ① 本来の宿命（ベース）のハッシュ生成と正規化カウント
     # ---------------------------------------------------------
     year = dob.year
     month_day = int(dob.strftime('%m%d'))
@@ -160,24 +157,29 @@ if predict_button:
     hash_base = f"{val_dob}{val_kanji}{val_alpha}"
     counts_base = Counter(hash_base)
 
-    # 0〜9の出現回数をカウント（上限5.0）
-    scores_base = {str(i): min(float(counts_base.get(str(i), 0)), 5.0) for i in range(10)}
+    # グラフを綺麗にするための「正規化」ロジック（一番多い数字を基準に相対評価）
+    raw_scores_base = {str(i): float(counts_base.get(str(i), 0)) for i in range(10)}
+    max_raw_base = max(raw_scores_base.values()) if max(raw_scores_base.values()) > 0 else 1.0
+    info_scale_base = min(max_raw_base / 3.0, 1.0) # 少なすぎる情報をカット
+    scores_base = {k: (v / max_raw_base) * 5.0 * info_scale_base for k, v in raw_scores_base.items()}
 
     # ---------------------------------------------------------
-    # ② 今の運勢（現在）のハッシュ生成とカウント
+    # ② 今の運勢（現在）のハッシュ生成と正規化カウント
     # ---------------------------------------------------------
-    # クリックした時間の数字（YYYYMMDDHHMM）
     time_num = int(now.strftime('%Y%m%d%H%M'))
     
-    # ベースの数字に、時間の数字を連結＆掛け算して巨大な文字列を生成
+    # ベース文字列に時間を混ぜ込む（卜術的要素）
     hash_now = hash_base + str(time_num) + str(int(hash_base) * time_num) if hash_base else str(time_num)
     counts_now = Counter(hash_now)
 
-    # 0〜9の出現回数をカウント（上限5.0）
-    scores_now = {str(i): min(float(counts_now.get(str(i), 0)), 5.0) for i in range(10)}
+    # 現在の波形も正規化して、メリハリのあるグラフに直す
+    raw_scores_now = {str(i): float(counts_now.get(str(i), 0)) for i in range(10)}
+    max_raw_now = max(raw_scores_now.values()) if max(raw_scores_now.values()) > 0 else 1.0
+    info_scale_now = min(max_raw_now / 3.0, 1.0)
+    scores_now = {k: (v / max_raw_now) * 5.0 * info_scale_now for k, v in raw_scores_now.items()}
 
     # ---------------------------------------------------------
-    # ③ シビアなデバフ（削り）の適用（ベースと現在の両方に適用）
+    # ③ シビアなデバフ（削り）の適用
     # ---------------------------------------------------------
     time_str = "" if time_unknown else tob.strftime('%H%M')
     blood_str = "" if blood_type.startswith("不明") else blood_type_strokes.get(blood_type, "")
