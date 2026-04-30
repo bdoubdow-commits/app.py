@@ -3,8 +3,6 @@ import plotly.graph_objects as go
 import datetime
 import json
 import os
-import hashlib
-import random
 from collections import Counter
 
 # --- ページ設定 ---
@@ -105,38 +103,10 @@ def get_numeric_value(text, stroke_dict):
             s += str(ord(char))
     return int(s) if s else 0
 
-def calc_resonance(dob, tob, time_unknown):
-    JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
-    now = datetime.datetime.now(JST)
-    today = now.date()
-    days_diff = abs((today - dob).days) % 365
-    date_resonance = 1.0 - (days_diff / 365.0)
-
-    if time_unknown:
-        time_resonance = 0.5
-    else:
-        now_minutes = now.hour * 60 + now.minute
-        birth_minutes = tob.hour * 60 + tob.minute
-        minutes_diff = abs(now_minutes - birth_minutes) % 1440
-        time_resonance = 1.0 - (min(minutes_diff, 1440 - minutes_diff) / 720.0)
-
-    return (date_resonance + time_resonance) / 2.0
-
 # --- 2. UI構築 ---
 st.markdown("""
 <style>
 h1 { color: #d4af37; text-align: center; font-family: 'serif'; }
-.resonance-box {
-    background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.02));
-    border: 1px solid rgba(212,175,55,0.3);
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin: 12px 0;
-    font-family: 'serif';
-}
-.resonance-title { color: #d4af37; font-size: 0.85em; letter-spacing: 0.15em; margin-bottom: 6px; }
-.resonance-value { color: #333; font-size: 2em; font-weight: bold; }
-.resonance-sub { color: #666; font-size: 0.8em; margin-top: 6px; line-height: 1.6; }
 .once-notice { color: #d4af37; font-size: 0.9em; text-align: center; margin-top: 4px; letter-spacing: 0.05em; font-weight: bold;}
 .detail-text { color: #444; font-size: 0.95em; line-height: 1.6; padding-bottom: 8px; }
 .detail-label { color: #d4af37; font-weight: bold; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; margin-top: 12px; }
@@ -145,7 +115,6 @@ h1 { color: #d4af37; text-align: center; font-family: 'serif'; }
 """, unsafe_allow_html=True)
 
 st.title("🔮 THE DESTINY")
-# --- サブタイトルを神秘的に修正 ---
 st.write("運命の波形が、隠されたあなたの本質を炙り出す。")
 st.markdown('<p class="once-notice">⚠️ 1日1度、1回目の判定が本物です。<br>2回目、3回目とズレてしまいますのでご注意ください。</p>', unsafe_allow_html=True)
 
@@ -176,71 +145,58 @@ if predict_button:
     JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
     now = datetime.datetime.now(JST)
 
-    # --- 宿命（ベース）の計算 ---
+    # ---------------------------------------------------------
+    # ① 本来の宿命（ベース）のハッシュ生成とカウント
+    # ---------------------------------------------------------
     year = dob.year
     month_day = int(dob.strftime('%m%d'))
     val_dob = abs(year - month_day)
     val_kanji = abs(get_numeric_value(last_name, hiragana_strokes) - get_numeric_value(first_name, hiragana_strokes))
     val_alpha = abs(get_numeric_value(first_name_alpha, alphabet_strokes) - get_numeric_value(last_name_alpha, alphabet_strokes))
 
-    hash_str = f"{val_dob}{val_kanji}{val_alpha}"
-    counts = Counter(hash_str)
+    hash_base = f"{val_dob}{val_kanji}{val_alpha}"
+    counts_base = Counter(hash_base)
 
-    raw_scores = {str(i): float(counts.get(str(i), 0)) for i in range(10)}
-    max_raw = max(raw_scores.values()) if max(raw_scores.values()) > 0 else 1.0
+    # 0〜9の出現回数をカウント（上限5.0）
+    scores_base = {str(i): min(float(counts_base.get(str(i), 0)), 5.0) for i in range(10)}
 
-    info_scale = min(max_raw / 3.0, 1.0)
-    scores = {k: (v / max_raw) * 5.0 * info_scale for k, v in raw_scores.items()}
+    # ---------------------------------------------------------
+    # ② 今の運勢（現在）のハッシュ生成とカウント
+    # ---------------------------------------------------------
+    # クリックした時間の数字（YYYYMMDDHHMM）
+    time_num = int(now.strftime('%Y%m%d%H%M'))
+    
+    # ベースの数字に、時間の数字を連結＆掛け算して巨大な文字列を生成
+    # （これにより、クリックした時間によって含まれる数字の個数が激しく変わる）
+    hash_now = hash_base + str(time_num) + str(int(hash_base) * time_num) if hash_base else str(time_num)
+    counts_now = Counter(hash_now)
 
+    # 0〜9の出現回数をカウント（上限5.0）
+    scores_now = {str(i): min(float(counts_now.get(str(i), 0)), 5.0) for i in range(10)}
+
+    # ---------------------------------------------------------
+    # ③ シビアなデバフ（削り）の適用（ベースと現在の両方に適用）
+    # ---------------------------------------------------------
     time_str = "" if time_unknown else tob.strftime('%H%M')
     blood_str = "" if blood_type.startswith("不明") else blood_type_strokes.get(blood_type, "")
 
     for i in range(10):
         digit = str(i)
         debuff = 0.0
+        
         if time_unknown or digit in time_str:
             debuff += 0.5
         if blood_type.startswith("不明") or digit in blood_str:
             debuff += 0.5
-        scores[digit] = max(0.0, scores[digit] - debuff)
+            
+        scores_base[digit] = max(0.0, scores_base[digit] - debuff)
+        scores_now[digit] = max(0.0, scores_now[digit] - debuff)
 
-    # --- クリックした「年月日時分」による変動（卜術的アプローチ） ---
-    seed_str = f"{now.strftime('%Y%m%d%H%M')}_{hash_str}"
-    seed_int = int(hashlib.md5(seed_str.encode()).hexdigest()[:8], 16)
-    random.seed(seed_int)
 
-    final_scores = {}
-    for digit, base_s in scores.items():
-        buff = random.uniform(-1.5, 2.5)
-        f_score = base_s + buff
-        final_scores[digit] = max(0.0, min(5.0, f_score))
-
-    # 共鳴係数の算出
-    resonance = calc_resonance(dob, tob, time_unknown)
-    resonance_pct = resonance * 100
-    if resonance_pct >= 75:
-        resonance_label, resonance_color = "極めて強い共鳴 ✨", "#d4af37"
-    elif resonance_pct >= 50:
-        resonance_label, resonance_color = "良好な共鳴 🌙", "#4a90e2"
-    elif resonance_pct >= 25:
-        resonance_label, resonance_color = "微弱な共鳴 🌫️", "#666666"
-    else:
-        resonance_label, resonance_color = "宿命との乖離 🌑", "#d0021b"
-
-    st.markdown(f"""
-    <div class="resonance-box">
-        <div class="resonance-title">▶ 現在の星回り</div>
-        <div class="resonance-value" style="color:{resonance_color}">{resonance_pct:.1f}%　<span style="font-size:0.5em">{resonance_label}</span></div>
-        <div class="resonance-sub">
-            あなたが扉を開いた瞬間の運命波形。<br>
-            結果は刻一刻と変化します。最初の導きを大切にしてください。
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
+    # --- グラフ表示 ---
     labels = [fortune_map[str(i)] for i in range(10)]
-    base_values = [scores[str(i)] for i in range(10)]
-    final_values = [final_scores[str(i)] for i in range(10)]
+    base_values = [scores_base[str(i)] for i in range(10)]
+    final_values = [scores_now[str(i)] for i in range(10)]
 
     fig = go.Figure()
 
@@ -277,36 +233,37 @@ if predict_button:
     st.subheader("🌟 あなたの真の運命チャート")
     st.plotly_chart(fig, use_container_width=True)
     
-    base_max_val = max(scores.values())
-    final_max_val = max(final_scores.values())
+    # --- テキスト出力 ＆ 詳細解説表示 ---
+    base_max_val = max(scores_base.values())
+    final_max_val = max(scores_now.values())
 
     if final_max_val > 0:
         st.markdown("---")
         
-        base_top_traits = [fortune_map[k] for k, v in scores.items() if v == base_max_val]
-        final_top_traits = [fortune_map[k] for k, v in final_scores.items() if v == final_max_val]
-        st.info(f"**👑 【生来の最大の武器】** {' / '.join(base_top_traits)} （ベース: {base_max_val:.2f}）")
-        st.success(f"**🎯 【今の最強ステータス】** {' / '.join(final_top_traits)} （現在: {final_max_val:.2f} / 5.0）")
+        base_top_traits = [fortune_map[k] for k, v in scores_base.items() if v == base_max_val]
+        final_top_traits = [fortune_map[k] for k, v in scores_now.items() if v == final_max_val]
+        st.info(f"**👑 【生来の最大の武器】** {' / '.join(base_top_traits)} （ベース: {base_max_val:.1f}）")
+        st.success(f"**🎯 【今の最強ステータス】** {' / '.join(final_top_traits)} （現在: {final_max_val:.1f} / 5.0）")
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📜 全パラメータ詳細解析")
         st.write("あなたの持つすべての宿命要素と、いまこの瞬間の星回りによる状態を解説します。（現在のスコアが高い順）")
 
-        sorted_keys = sorted(final_scores.keys(), key=lambda x: final_scores[x], reverse=True)
+        sorted_keys = sorted(scores_now.keys(), key=lambda x: scores_now[x], reverse=True)
 
         for k in sorted_keys:
             trait_name = fortune_map[k]
-            b_score = scores[k]
-            f_score = final_scores[k]
+            b_score = scores_base[k]
+            f_score = scores_now[k]
             
             b_text = trait_details[k]['base_high'] if b_score >= 3.0 else trait_details[k]['base_low']
             f_text = trait_details[k]['today_high'] if f_score >= 3.0 else trait_details[k]['today_low']
             
-            with st.expander(f"■ {trait_name} （本来: {b_score:.2f} ➔ 現在: {f_score:.2f}）"):
-                st.markdown(f"<div class='detail-label'>本来の宿命（ベーススコア: {b_score:.2f}）</div>", unsafe_allow_html=True)
+            with st.expander(f"■ {trait_name} （本来: {b_score:.1f} ➔ 現在: {f_score:.1f}）"):
+                st.markdown(f"<div class='detail-label'>本来の宿命（ベーススコア: {b_score:.1f}）</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='detail-text'>{b_text}</div>", unsafe_allow_html=True)
                 
-                st.markdown(f"<div class='detail-label-today'>今の運勢（最終スコア: {f_score:.2f}）</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-label-today'>今の運勢（最終スコア: {f_score:.1f}）</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='detail-text'>{f_text}</div>", unsafe_allow_html=True)
 
     else:
