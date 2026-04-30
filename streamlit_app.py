@@ -32,7 +32,6 @@ fortune_map = {
     '5': '行動・変化', '6': '家庭・愛情', '7': '分析・投資', '8': '金運・成功', '9': 'カリスマ'
 }
 
-# スコアの高低（3.0以上か未満か）でテキストを完全分岐
 trait_details = {
     '0': {
         'base_high': '逆境に強く、ピンチをチャンスに変える隠された力を持っています。表舞台よりも、裏から全体を操るフィクサーとしての才能が光ります。',
@@ -137,7 +136,7 @@ h1 { color: #d4af37; text-align: center; font-family: 'serif'; }
 .resonance-title { color: #d4af37; font-size: 0.85em; letter-spacing: 0.15em; margin-bottom: 6px; }
 .resonance-value { color: #333; font-size: 2em; font-weight: bold; }
 .resonance-sub { color: #666; font-size: 0.8em; margin-top: 6px; line-height: 1.6; }
-.once-notice { color: #d4af37; font-size: 0.8em; text-align: center; margin-top: 4px; letter-spacing: 0.05em; font-weight: bold;}
+.once-notice { color: #d4af37; font-size: 0.9em; text-align: center; margin-top: 4px; letter-spacing: 0.05em; font-weight: bold;}
 .detail-text { color: #444; font-size: 0.95em; line-height: 1.6; padding-bottom: 8px; }
 .detail-label { color: #d4af37; font-weight: bold; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; margin-top: 12px; }
 .detail-label-today { color: #4a90e2; font-weight: bold; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; margin-top: 12px; }
@@ -146,7 +145,7 @@ h1 { color: #d4af37; text-align: center; font-family: 'serif'; }
 
 st.title("🔮 THE DESTINY")
 st.write("計算された差異が、真の宿命を炙り出す。")
-st.markdown('<p class="once-notice">⚠️ 扉は今日一度だけ開かれる——最初の結果が、あなたの本当の声。</p>', unsafe_allow_html=True)
+st.markdown('<p class="once-notice">⚠️ 1日1度、1回目の判定が本物です。<br>2回目、3回目とズレてしまいますのでご注意ください。</p>', unsafe_allow_html=True)
 
 with st.container():
     st.subheader("【基本情報】")
@@ -160,7 +159,6 @@ with st.container():
 
     dob = st.date_input("生年月日", min_value=datetime.date(1900, 1, 1), value=datetime.date(2000, 1, 1))
 
-    # UIの表現をマイルドに修正
     st.subheader("【追加情報（より深く運命を読み解く）】")
     col3, col4 = st.columns(2)
     with col3:
@@ -169,7 +167,7 @@ with st.container():
     with col4:
         blood_type = st.selectbox("血液型", ["A型", "B型", "O型", "AB型", "不明"], index=4)
 
-    predict_button = st.button("運命を解析する")
+    predict_button = st.button("本日の運命を解析する")
 
 # --- 3. 解析ロジック ---
 if predict_button:
@@ -203,21 +201,20 @@ if predict_button:
             debuff += 0.5
         scores[digit] = max(0.0, scores[digit] - debuff)
 
-    # --- NEW: クリックした「年月日時分」によるダイナミックバフの適用 ---
-    # アクセス時間とユーザー固有情報から、今回限りの強力なシードを生成
+    # --- クリックした「年月日時分」による変動（卜術的アプローチ） ---
+    # アクセスした瞬間の「分」まで含めたシードで、毎分運勢が揺らぐように設定
     seed_str = f"{now.strftime('%Y%m%d%H%M')}_{hash_str}"
     seed_int = int(hashlib.md5(seed_str.encode()).hexdigest()[:8], 16)
     random.seed(seed_int)
 
     final_scores = {}
     for digit, base_s in scores.items():
-        # アクセスタイミングによって -1.5 〜 +2.5 の間で激しく運勢が変動（バフ）
+        # アクセスタイミングによって -1.5 〜 +2.5 の間で運勢が変動
         buff = random.uniform(-1.5, 2.5)
         f_score = base_s + buff
-        # 必ず 0.0 〜 5.0 の枠に収める
         final_scores[digit] = max(0.0, min(5.0, f_score))
 
-    # 演出用の共鳴係数
+    # 共鳴係数の算出
     resonance = calc_resonance(dob, tob, time_unknown)
     resonance_pct = resonance * 100
     if resonance_pct >= 75:
@@ -231,11 +228,11 @@ if predict_button:
 
     st.markdown(f"""
     <div class="resonance-box">
-        <div class="resonance-title">▶ 今日の星回り（バフ適用）</div>
-        <div class="resonance-value" style="color:{resonance_color}">{now.strftime('%H:%M')} の運気波動</div>
+        <div class="resonance-title">▶ {now.strftime('%H:%M')} の星回り</div>
+        <div class="resonance-value" style="color:{resonance_color}">{resonance_pct:.1f}%　<span style="font-size:0.5em">{resonance_label}</span></div>
         <div class="resonance-sub">
-            {now.strftime('%Y/%m/%d %H:%M')} に扉を開いた。<br>
-            アクセスした瞬間の時間が、あなたの宿命に強烈なバフを与えています。
+            あなたが扉を開いた {now.strftime('%Y/%m/%d %H:%M')} 瞬間の運命波形。<br>
+            結果は刻一刻と変化します。最初の導きを大切にしてください。
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -279,7 +276,6 @@ if predict_button:
     st.subheader("🌟 あなたの真の運命チャート")
     st.plotly_chart(fig, use_container_width=True)
     
-    # --- Step 7: テキスト出力 ＆ 全項目の詳細解説表示 ---
     base_max_val = max(scores.values())
     final_max_val = max(final_scores.values())
 
@@ -293,7 +289,7 @@ if predict_button:
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📜 全パラメータ詳細解析")
-        st.write("あなたの持つすべての宿命要素と、今の時間のバフを受けた状態を解説します。（現在のスコアが高い順）")
+        st.write("あなたの持つすべての宿命要素と、いまこの瞬間の星回りによる状態を解説します。（現在のスコアが高い順）")
 
         sorted_keys = sorted(final_scores.keys(), key=lambda x: final_scores[x], reverse=True)
 
@@ -302,7 +298,6 @@ if predict_button:
             b_score = scores[k]
             f_score = final_scores[k]
             
-            # スコアが3.0以上か未満かで、テキストを分岐取得
             b_text = trait_details[k]['base_high'] if b_score >= 3.0 else trait_details[k]['base_low']
             f_text = trait_details[k]['today_high'] if f_score >= 3.0 else trait_details[k]['today_low']
             
