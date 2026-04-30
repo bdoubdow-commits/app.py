@@ -8,7 +8,7 @@ from collections import Counter
 # --- ページ設定 ---
 st.set_page_config(page_title="THE DESTINY - 数字が導く宿命", page_icon="🔮", layout="centered")
 
-# --- 1. 画数・数値変換データ ---
+# --- 1. 画数・変換データ＆解説テキスト ---
 alphabet_strokes = {
     'A': '3', 'B': '2', 'C': '1', 'D': '2', 'E': '4', 'F': '3', 'G': '1', 'H': '3', 'I': '1',
     'J': '2', 'K': '3', 'L': '2', 'M': '4', 'N': '3', 'O': '1', 'P': '2', 'Q': '2', 'R': '3',
@@ -28,6 +28,50 @@ blood_type_strokes = {"A型": "3", "B型": "2", "O型": "1", "AB型": "32"}
 fortune_map = {
     '0': '潜在・逆転', '1': '勝負・独立', '2': '恋愛・対人', '3': '人気・表現', '4': '健康・安定',
     '5': '行動・変化', '6': '家庭・愛情', '7': '分析・投資', '8': '金運・成功', '9': 'カリスマ'
+}
+
+# 🌟 追加：全10項目の詳細解説辞書
+trait_details = {
+    '0': {
+        'base': '逆境に強く、ピンチをチャンスに変える隠された力を持っています。表舞台よりも、裏から全体を操るフィクサーとしての才能が光ります。',
+        'today': '今日は予想外の展開が味方する日です。一見マイナスに思えるトラブルこそが、大逆転のトリガーになります。焦らず好機を待ちましょう。'
+    },
+    '1': {
+        'base': '誰にも頼らず自らの力で道を切り開く、強い意志と勝負強さを持っています。群れを嫌い、個人の実力でトップに立つ一匹狼の気質です。',
+        'today': '直感に従い、大胆な決断を下すのに適した日です。誰かに相談するよりも、自分自身の直感を信じて即断即決することで道が開けます。'
+    },
+    '2': {
+        'base': '人の心を惹きつける天性の魅力を持ち、良縁を引き寄せる才能があります。他者の感情の機微を読み取り、味方につける交渉術は一級品です。',
+        'today': 'コミュニケーションが信じられないほど円滑に進む日。新しい出会いや、大切な人との絆が深まる予感があります。連絡は自分から積極的に。'
+    },
+    '3': {
+        'base': '自己表現力に長け、自然と人が集まる華やかなオーラを放っています。あなたの言葉やセンスは、無意識のうちに他者に強い影響を与えます。',
+        'today': 'あなたの発言やアイデアに注目が集まる日です。SNSでの発信や、会議での提案など、内に秘めず「外に向けてアピールする」ことが吉です。'
+    },
+    '4': {
+        'base': '精神的・肉体的なバランス感覚に優れ、絶対にブレない強固な土台を築く力があります。長期戦になるほど、あなたの堅実さが勝利を生みます。',
+        'today': '無理な背伸びをせず、足場を固めるのに最適な日。いつものルーティンワークを淡々とこなすことで、逆に運気が底上げされていきます。'
+    },
+    '5': {
+        'base': 'ひとつの場所に留まらず、常に新しい刺激を求めて進化し続けるフットワークの軽さが武器です。変化を恐れず、常に最前線を走り続けます。',
+        'today': '「いつもと違う選択」が幸運を呼ぶ日。通ったことのない道を歩く、普段見ないジャンルの情報に触れるなど、小さな変化を起こしましょう。'
+    },
+    '6': {
+        'base': '身近な人を深く愛し、守り抜く強さと圧倒的な包容力を持っています。あなたの周りには、あなたを深く信頼する絶対的な味方が集まります。',
+        'today': 'プライベートな空間や、ごく親しい人との時間が最大のエネルギー源になる日。今日は外での勝負より、内側の人間関係を大切にしてください。'
+    },
+    '7': {
+        'base': '物事の本質を見抜く鋭い観察眼と、長期的な利益を緻密に計算できるロジカルな頭脳を持っています。感情に流されない冷徹な分析が最大の武器です。',
+        'today': '冷静な判断が冴え渡る日。大きな買い物や、将来への投資（自己投資や学習含む）、計画の見直しなど、頭を使う作業が最高の結果を生みます。'
+    },
+    '8': {
+        'base': '物質的な豊かさを引き寄せ、社会的成功を収めるための強い引力を持っています。目標を達成するための執念と、結果を出す力は群を抜いています。',
+        'today': '努力が「目に見える形（評価や利益）」になりやすい最高の日。遠慮は一切不要です。今日は貪欲に、自分の手柄や結果を求めて動いてください。'
+    },
+    '9': {
+        'base': '既存の常識に囚われず、圧倒的な存在感で他者を導く天性のカリスマ性とリーダーシップを持っています。あなたの一挙手一投足が時代の基準になります。',
+        'today': 'あなたの存在そのものが周囲の空気を支配する日。誰かの顔色を伺う必要はありません。自信を持って堂々と振る舞うだけで、全てが思い通りに動きます。'
+    }
 }
 
 def get_numeric_value(text, stroke_dict):
@@ -72,6 +116,24 @@ h1 { color: #d4af37; text-align: center; font-family: 'serif'; }
 .resonance-value { color: #333; font-size: 2em; font-weight: bold; }
 .resonance-sub { color: #666; font-size: 0.8em; margin-top: 6px; line-height: 1.6; }
 .once-notice { color: #d4af37; font-size: 0.8em; text-align: center; margin-top: 4px; letter-spacing: 0.05em; font-weight: bold;}
+.detail-box {
+    background-color: #f8f9fa;
+    border-left: 5px solid #d4af37;
+    padding: 15px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    color: #333;
+}
+.detail-box-today {
+    background-color: #f0f7ff;
+    border-left: 5px solid #4a90e2;
+    padding: 15px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    color: #333;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -180,11 +242,10 @@ if predict_button:
         name='今日の波形'
     ))
 
-    # --- 白背景用に色を調整 ---
     fig.update_layout(
         polar=dict(
             radialaxis=dict(visible=True, range=[0, 5], tickvals=[1, 2, 3, 4, 5], tickcolor="#cccccc", gridcolor="#e0e0e0"),
-            angularaxis=dict(gridcolor="#e0e0e0", tickfont=dict(size=12, color="#333333")) # 文字色をダークグレーに
+            angularaxis=dict(gridcolor="#e0e0e0", tickfont=dict(size=12, color="#333333"))
         ),
         showlegend=True,
         legend=dict(font=dict(color="#333333"), orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
@@ -196,15 +257,30 @@ if predict_button:
     st.subheader("🌟 あなたの真の運命チャート")
     st.plotly_chart(fig, use_container_width=True)
     
+    # --- Step 7: テキスト出力 ＆ 詳細解説表示 ---
     base_max_val = max(scores.values())
-    base_top_traits = [fortune_map[k] for k, v in scores.items() if v == base_max_val]
     final_max_val = max(final_scores.values())
-    final_top_traits = [fortune_map[k] for k, v in final_scores.items() if v == final_max_val]
 
     if final_max_val > 0:
-        st.markdown(f"**【生来の宿命】** あなたが本来持つ最大の武器は **「{' / '.join(base_top_traits)}」** です。（ベーススコア: {base_max_val:.2f}）")
-        st.info(f"**【今日の波形】** 星との共鳴を経た今日の武器は **「{' / '.join(final_top_traits)}」** です。（最終スコア: {final_max_val:.2f} / 5.0）")
+        st.markdown("---")
+        st.subheader("📜 宿命と運勢の深淵解説")
+        
+        # 本来の宿命（ベース）の解説
+        st.markdown(f"#### 🔘 【本来の宿命】最大の武器（スコア: {base_max_val:.2f}）")
+        for k, v in scores.items():
+            if v == base_max_val:
+                st.markdown(f"**■ {fortune_map[k]}**")
+                st.markdown(f"<div class='detail-box'>{trait_details[k]['base']}</div>", unsafe_allow_html=True)
+        
+        # 今日の波形の解説
+        st.markdown(f"#### 🌟 【今日の波形】星からのメッセージ（スコア: {final_max_val:.2f}）")
+        for k, v in final_scores.items():
+            if v == final_max_val:
+                st.markdown(f"**■ {fortune_map[k]}**")
+                st.markdown(f"<div class='detail-box-today'>{trait_details[k]['today']}</div>", unsafe_allow_html=True)
 
+        # 総合評価メッセージ
+        st.markdown("---")
         if resonance_pct >= 75:
             st.success("✨ 今日は星との共鳴が極めて強い。この結果を信じよ。")
         elif resonance_pct >= 50:
