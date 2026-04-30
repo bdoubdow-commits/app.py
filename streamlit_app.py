@@ -138,8 +138,8 @@ h2, h3 { color: #d4af37 !important; font-family: 'Noto Serif JP', 'Mincho', seri
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🔮 THE DESTINY")
-st.markdown("<p class='sub-title'>運命の波形が、隠されたあなたの本質を炙り出す</p>", unsafe_allow_html=True)
+st.title("🔮 RESONANCE")
+st.markdown("<p class='sub-title'>絶対宿命律が、隠されたあなたの本質を炙り出す</p>", unsafe_allow_html=True)
 st.markdown('<p class="once-notice">⚠️ 1日1度、1回目の判定のみが真実です。<br>2回目以降の波形は宇宙のノイズにより歪みます。</p>', unsafe_allow_html=True)
 
 with st.container():
