@@ -1,6 +1,9 @@
 import streamlit as st
 import plotly.graph_objects as go
 import datetime
+import json
+import os
+import hashlib
 from collections import Counter
 
 # --- ページ設定 ---
@@ -114,7 +117,6 @@ h1 { color: #d4af37; text-align: center; font-family: 'serif'; margin-bottom: 5p
 """, unsafe_allow_html=True)
 
 st.title("🔮 THE DESTINY")
-# センター寄せのサブタイトル
 st.markdown("<p class='sub-title'>運命の波形が、隠されたあなたの本質を炙り出す。</p>", unsafe_allow_html=True)
 st.markdown('<p class="once-notice">⚠️ 1日1度、1回目の判定が本物です。<br>2回目、3回目とズレてしまいますのでご注意ください。</p>', unsafe_allow_html=True)
 
@@ -146,7 +148,7 @@ if predict_button:
     now = datetime.datetime.now(JST)
 
     # ---------------------------------------------------------
-    # ① 本来の宿命（ベース）のハッシュ生成と正規化カウント
+    # ① 本来の宿命（ベース）のハッシュ生成と「有機的」なカウント
     # ---------------------------------------------------------
     year = dob.year
     month_day = int(dob.strftime('%m%d'))
@@ -157,25 +159,39 @@ if predict_button:
     hash_base = f"{val_dob}{val_kanji}{val_alpha}"
     counts_base = Counter(hash_base)
 
-    # グラフを綺麗にするための「正規化」ロジック（一番多い数字を基準に相対評価）
-    raw_scores_base = {str(i): float(counts_base.get(str(i), 0)) for i in range(10)}
+    raw_scores_base = {}
+    for i in range(10):
+        digit = str(i)
+        base_count = counts_base.get(digit, 0)
+        # 0.5刻みになるのを防ぐため、ハッシュ由来の固有の小数（0.00〜0.99）を付与
+        seed_str = f"{hash_base}_base_{i}"
+        decimal_noise = (int(hashlib.md5(seed_str.encode()).hexdigest()[:8], 16) % 100) / 100.0
+        raw_scores_base[digit] = base_count + decimal_noise
+
     max_raw_base = max(raw_scores_base.values()) if max(raw_scores_base.values()) > 0 else 1.0
-    info_scale_base = min(max_raw_base / 3.0, 1.0) # 少なすぎる情報をカット
+    info_scale_base = min(max_raw_base / 3.0, 1.0)
+    # 正規化（トップを5.0にしつつ、小数のバラつきを残す）
     scores_base = {k: (v / max_raw_base) * 5.0 * info_scale_base for k, v in raw_scores_base.items()}
 
     # ---------------------------------------------------------
-    # ② 今の運勢（現在）のハッシュ生成と正規化カウント
+    # ② 今の運勢（現在）のハッシュ生成と「有機的」なカウント
     # ---------------------------------------------------------
-    time_num = int(now.strftime('%Y%m%d%H%M'))
-    
-    # ベース文字列に時間を混ぜ込む（卜術的要素）
-    hash_now = hash_base + str(time_num) + str(int(hash_base) * time_num) if hash_base else str(time_num)
+    # 平らになる（カンストする）のを防ぐため、掛け算を廃止して純粋な文字連結のみに
+    time_num_str = now.strftime('%Y%m%d%H%M')
+    hash_now = hash_base + time_num_str
     counts_now = Counter(hash_now)
 
-    # 現在の波形も正規化して、メリハリのあるグラフに直す
-    raw_scores_now = {str(i): float(counts_now.get(str(i), 0)) for i in range(10)}
+    raw_scores_now = {}
+    for i in range(10):
+        digit = str(i)
+        now_count = counts_now.get(digit, 0)
+        # ベースとは異なる固有の小数ノイズを付与
+        seed_str_now = f"{hash_now}_now_{i}"
+        decimal_noise_now = (int(hashlib.md5(seed_str_now.encode()).hexdigest()[:8], 16) % 100) / 100.0
+        raw_scores_now[digit] = now_count + decimal_noise_now
+
     max_raw_now = max(raw_scores_now.values()) if max(raw_scores_now.values()) > 0 else 1.0
-    info_scale_now = min(max_raw_now / 3.0, 1.0)
+    info_scale_now = min(max_raw_now / 4.0, 1.0) # 少し厳しめに設定し、容易な満点を防ぐ
     scores_now = {k: (v / max_raw_now) * 5.0 * info_scale_now for k, v in raw_scores_now.items()}
 
     # ---------------------------------------------------------
@@ -245,8 +261,10 @@ if predict_button:
         
         base_top_traits = [fortune_map[k] for k, v in scores_base.items() if v == base_max_val]
         final_top_traits = [fortune_map[k] for k, v in scores_now.items() if v == final_max_val]
-        st.info(f"**👑 【生来の最大の武器】** {' / '.join(base_top_traits)} （ベース: {base_max_val:.1f}）")
-        st.success(f"**🎯 【今の最強ステータス】** {' / '.join(final_top_traits)} （現在: {final_max_val:.1f} / 5.0）")
+        
+        # 小数第二位まで表示して、有機的な数値であることをアピール
+        st.info(f"**👑 【生来の最大の武器】** {' / '.join(base_top_traits)} （ベース: {base_max_val:.2f}）")
+        st.success(f"**🎯 【今の最強ステータス】** {' / '.join(final_top_traits)} （現在: {final_max_val:.2f} / 5.00）")
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📜 全パラメータ詳細解析")
@@ -262,11 +280,11 @@ if predict_button:
             b_text = trait_details[k]['base_high'] if b_score >= 3.0 else trait_details[k]['base_low']
             f_text = trait_details[k]['today_high'] if f_score >= 3.0 else trait_details[k]['today_low']
             
-            with st.expander(f"■ {trait_name} （本来: {b_score:.1f} ➔ 現在: {f_score:.1f}）"):
-                st.markdown(f"<div class='detail-label'>本来の宿命（ベーススコア: {b_score:.1f}）</div>", unsafe_allow_html=True)
+            with st.expander(f"■ {trait_name} （本来: {b_score:.2f} ➔ 現在: {f_score:.2f}）"):
+                st.markdown(f"<div class='detail-label'>本来の宿命（ベーススコア: {b_score:.2f}）</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='detail-text'>{b_text}</div>", unsafe_allow_html=True)
                 
-                st.markdown(f"<div class='detail-label-today'>今の運勢（最終スコア: {f_score:.1f}）</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-label-today'>今の運勢（最終スコア: {f_score:.2f}）</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='detail-text'>{f_text}</div>", unsafe_allow_html=True)
 
     else:
