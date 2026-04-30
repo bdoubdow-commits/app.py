@@ -30,7 +30,6 @@ fortune_map = {
     '5': '行動・変化', '6': '家庭・愛情', '7': '分析・投資', '8': '金運・成功', '9': 'カリスマ'
 }
 
-# 🌟 追加：全10項目の詳細解説辞書
 trait_details = {
     '0': {
         'base': '逆境に強く、ピンチをチャンスに変える隠された力を持っています。表舞台よりも、裏から全体を操るフィクサーとしての才能が光ります。',
@@ -116,24 +115,9 @@ h1 { color: #d4af37; text-align: center; font-family: 'serif'; }
 .resonance-value { color: #333; font-size: 2em; font-weight: bold; }
 .resonance-sub { color: #666; font-size: 0.8em; margin-top: 6px; line-height: 1.6; }
 .once-notice { color: #d4af37; font-size: 0.8em; text-align: center; margin-top: 4px; letter-spacing: 0.05em; font-weight: bold;}
-.detail-box {
-    background-color: #f8f9fa;
-    border-left: 5px solid #d4af37;
-    padding: 15px;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-    color: #333;
-}
-.detail-box-today {
-    background-color: #f0f7ff;
-    border-left: 5px solid #4a90e2;
-    padding: 15px;
-    margin-top: 10px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-    color: #333;
-}
+.detail-text { color: #444; font-size: 0.95em; line-height: 1.6; padding-bottom: 8px; }
+.detail-label { color: #d4af37; font-weight: bold; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; margin-top: 12px; }
+.detail-label-today { color: #4a90e2; font-weight: bold; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; margin-top: 12px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -257,27 +241,41 @@ if predict_button:
     st.subheader("🌟 あなたの真の運命チャート")
     st.plotly_chart(fig, use_container_width=True)
     
-    # --- Step 7: テキスト出力 ＆ 詳細解説表示 ---
+    # --- Step 7: テキスト出力 ＆ 全項目の詳細解説表示 ---
     base_max_val = max(scores.values())
     final_max_val = max(final_scores.values())
 
     if final_max_val > 0:
         st.markdown("---")
-        st.subheader("📜 宿命と運勢の深淵解説")
         
-        # 本来の宿命（ベース）の解説
-        st.markdown(f"#### 🔘 【本来の宿命】最大の武器（スコア: {base_max_val:.2f}）")
-        for k, v in scores.items():
-            if v == base_max_val:
-                st.markdown(f"**■ {fortune_map[k]}**")
-                st.markdown(f"<div class='detail-box'>{trait_details[k]['base']}</div>", unsafe_allow_html=True)
-        
-        # 今日の波形の解説
-        st.markdown(f"#### 🌟 【今日の波形】星からのメッセージ（スコア: {final_max_val:.2f}）")
-        for k, v in final_scores.items():
-            if v == final_max_val:
-                st.markdown(f"**■ {fortune_map[k]}**")
-                st.markdown(f"<div class='detail-box-today'>{trait_details[k]['today']}</div>", unsafe_allow_html=True)
+        # サマリー表示（トップの能力）
+        base_top_traits = [fortune_map[k] for k, v in scores.items() if v == base_max_val]
+        final_top_traits = [fortune_map[k] for k, v in final_scores.items() if v == final_max_val]
+        st.info(f"**👑 【生来の最大の武器】** {' / '.join(base_top_traits)} （ベーススコア: {base_max_val:.2f}）")
+        st.success(f"**🎯 【今日の最大の武器】** {' / '.join(final_top_traits)} （最終スコア: {final_max_val:.2f} / 5.0）")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.subheader("📜 全パラメータ詳細解析")
+        st.write("あなたの持つすべての宿命要素と、星との共鳴による本日の状態を解説します。（今日のスコアが高い順）")
+
+        # 今日のスコア（final_scores）が高い順にキーをソート
+        sorted_keys = sorted(final_scores.keys(), key=lambda x: final_scores[x], reverse=True)
+
+        # 全10項目をアコーディオン（expander）で展開
+        for k in sorted_keys:
+            trait_name = fortune_map[k]
+            b_score = scores[k]
+            f_score = final_scores[k]
+            
+            # アコーディオンのタイトル（例: ■ カリスマ （本来: 4.50 ➔ 今日: 4.80））
+            with st.expander(f"■ {trait_name} （本来: {b_score:.2f} ➔ 今日: {f_score:.2f}）"):
+                # 本来の宿命の解説
+                st.markdown(f"<div class='detail-label'>本来の宿命（ベーススコア: {b_score:.2f}）</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-text'>{trait_details[k]['base']}</div>", unsafe_allow_html=True)
+                
+                # 今日の運勢の解説
+                st.markdown(f"<div class='detail-label-today'>今日の運勢（最終スコア: {f_score:.2f}）</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-text'>{trait_details[k]['today']}</div>", unsafe_allow_html=True)
 
         # 総合評価メッセージ
         st.markdown("---")
