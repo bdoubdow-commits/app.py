@@ -3,6 +3,8 @@ import plotly.graph_objects as go
 import datetime
 import json
 import os
+import hashlib
+import random
 from collections import Counter
 
 # --- ページ設定 ---
@@ -122,8 +124,9 @@ with st.container():
     st.subheader("【基本情報】")
     col1, col2 = st.columns(2)
     with col1:
-        last_name = st.text_input("姓（漢字・ひらがな）", placeholder="例：山田")
-        first_name = st.text_input("名（漢字・ひらがな）", placeholder="例：太郎")
+        # ラベルをスッキリと変更
+        last_name = st.text_input("姓", placeholder="例：山田")
+        first_name = st.text_input("名", placeholder="例：太郎")
     with col2:
         last_name_alpha = st.text_input("姓（ローマ字）", placeholder="例：YAMADA")
         first_name_alpha = st.text_input("名（ローマ字）", placeholder="例：TARO")
@@ -167,7 +170,6 @@ if predict_button:
     time_num = int(now.strftime('%Y%m%d%H%M'))
     
     # ベースの数字に、時間の数字を連結＆掛け算して巨大な文字列を生成
-    # （これにより、クリックした時間によって含まれる数字の個数が激しく変わる）
     hash_now = hash_base + str(time_num) + str(int(hash_base) * time_num) if hash_base else str(time_num)
     counts_now = Counter(hash_now)
 
@@ -191,7 +193,6 @@ if predict_button:
             
         scores_base[digit] = max(0.0, scores_base[digit] - debuff)
         scores_now[digit] = max(0.0, scores_now[digit] - debuff)
-
 
     # --- グラフ表示 ---
     labels = [fortune_map[str(i)] for i in range(10)]
