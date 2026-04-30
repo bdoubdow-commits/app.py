@@ -106,7 +106,8 @@ def get_numeric_value(text, stroke_dict):
     return int(s) if s else 0
 
 def calc_resonance(dob, tob, time_unknown):
-    now = datetime.datetime.now()
+    JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
+    now = datetime.datetime.now(JST)
     today = now.date()
     days_diff = abs((today - dob).days) % 365
     date_resonance = 1.0 - (days_diff / 365.0)
@@ -171,7 +172,9 @@ with st.container():
 
 # --- 3. 解析ロジック ---
 if predict_button:
-    now = datetime.datetime.now()
+    # サーバーの時刻ズレを防ぐため日本時間（JST）で取得
+    JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
+    now = datetime.datetime.now(JST)
 
     # --- 宿命（ベース）の計算 ---
     year = dob.year
@@ -202,14 +205,12 @@ if predict_button:
         scores[digit] = max(0.0, scores[digit] - debuff)
 
     # --- クリックした「年月日時分」による変動（卜術的アプローチ） ---
-    # アクセスした瞬間の「分」まで含めたシードで、毎分運勢が揺らぐように設定
     seed_str = f"{now.strftime('%Y%m%d%H%M')}_{hash_str}"
     seed_int = int(hashlib.md5(seed_str.encode()).hexdigest()[:8], 16)
     random.seed(seed_int)
 
     final_scores = {}
     for digit, base_s in scores.items():
-        # アクセスタイミングによって -1.5 〜 +2.5 の間で運勢が変動
         buff = random.uniform(-1.5, 2.5)
         f_score = base_s + buff
         final_scores[digit] = max(0.0, min(5.0, f_score))
@@ -228,10 +229,10 @@ if predict_button:
 
     st.markdown(f"""
     <div class="resonance-box">
-        <div class="resonance-title">▶ {now.strftime('%H:%M')} の星回り</div>
+        <div class="resonance-title">▶ 現在の星回り</div>
         <div class="resonance-value" style="color:{resonance_color}">{resonance_pct:.1f}%　<span style="font-size:0.5em">{resonance_label}</span></div>
         <div class="resonance-sub">
-            あなたが扉を開いた {now.strftime('%Y/%m/%d %H:%M')} 瞬間の運命波形。<br>
+            あなたが扉を開いた瞬間の運命波形。<br>
             結果は刻一刻と変化します。最初の導きを大切にしてください。
         </div>
     </div>
