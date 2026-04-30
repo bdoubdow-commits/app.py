@@ -3,12 +3,14 @@ import plotly.graph_objects as go
 import datetime
 import json
 import os
+import hashlib
+import random
 from collections import Counter
 
 # --- ページ設定 ---
 st.set_page_config(page_title="THE DESTINY - 数字が導く宿命", page_icon="🔮", layout="centered")
 
-# --- 1. 画数・変換データ＆解説テキスト ---
+# --- 1. 画数・変換データ＆解説テキスト（高低で分岐） ---
 alphabet_strokes = {
     'A': '3', 'B': '2', 'C': '1', 'D': '2', 'E': '4', 'F': '3', 'G': '1', 'H': '3', 'I': '1',
     'J': '2', 'K': '3', 'L': '2', 'M': '4', 'N': '3', 'O': '1', 'P': '2', 'Q': '2', 'R': '3',
@@ -30,46 +32,67 @@ fortune_map = {
     '5': '行動・変化', '6': '家庭・愛情', '7': '分析・投資', '8': '金運・成功', '9': 'カリスマ'
 }
 
+# スコアの高低（3.0以上か未満か）でテキストを完全分岐
 trait_details = {
     '0': {
-        'base': '逆境に強く、ピンチをチャンスに変える隠された力を持っています。表舞台よりも、裏から全体を操るフィクサーとしての才能が光ります。',
-        'today': '今日は予想外の展開が味方する日です。一見マイナスに思えるトラブルこそが、大逆転のトリガーになります。焦らず好機を待ちましょう。'
+        'base_high': '逆境に強く、ピンチをチャンスに変える隠された力を持っています。表舞台よりも、裏から全体を操るフィクサーとしての才能が光ります。',
+        'base_low': '予期せぬ事態への耐性がやや低く、想定外のトラブルに直面すると本来の力を見失いがちです。事前準備が運命を分けます。',
+        'today_high': '今日は予想外の展開が完全に味方します。一見マイナスに思えるトラブルこそが大逆転のトリガーに。焦らず好機を待ちましょう。',
+        'today_low': '隠れていた問題が表面化しやすい日です。無理に状況を覆そうとせず、今日はダメージを最小限に抑える防御の姿勢が吉です。'
     },
     '1': {
-        'base': '誰にも頼らず自らの力で道を切り開く、強い意志と勝負強さを持っています。群れを嫌い、個人の実力でトップに立つ一匹狼の気質です。',
-        'today': '直感に従い、大胆な決断を下すのに適した日です。誰かに相談するよりも、自分自身の直感を信じて即断即決することで道が開けます。'
+        'base_high': '誰にも頼らず自らの力で道を切り開く、強い意志と勝負強さを持っています。群れを嫌い、個人の実力でトップに立つ気質です。',
+        'base_low': '決断の場面で他者の意見に流されやすい傾向があります。自分の軸よりも協調性を優先するため、勝負を避けることが多いです。',
+        'today_high': '直感に従い、大胆な決断を下すのに適した日です。誰かに相談するよりも、自分自身の直感を信じて即断即決することで道が開けます。',
+        'today_low': '今日は勝負に出ると裏目に出やすい日。一発逆転を狙うよりも、確実な一歩を刻むこと。大きな決断は明日に回すのが無難です。'
     },
     '2': {
-        'base': '人の心を惹きつける天性の魅力を持ち、良縁を引き寄せる才能があります。他者の感情の機微を読み取り、味方につける交渉術は一級品です。',
-        'today': 'コミュニケーションが信じられないほど円滑に進む日。新しい出会いや、大切な人との絆が深まる予感があります。連絡は自分から積極的に。'
+        'base_high': '人の心を惹きつける天性の魅力を持ち、良縁を引き寄せる才能があります。他者の感情の機微を読み取り、味方につける交渉術は一級品。',
+        'base_low': '人間関係において距離感を取るのが苦手、あるいは極端に壁を作りがちです。無意識のうちに孤立を選んでしまう傾向があります。',
+        'today_high': 'コミュニケーションが信じられないほど円滑に進む日。新しい出会いや、大切な人との絆が深まる予感があります。連絡は自分から積極的に。',
+        'today_low': '些細な言葉のすれ違いが大きな誤解を生みやすい日。冗談のつもりでも相手を深く傷つける可能性があります。発言には細心の注意を。'
     },
     '3': {
-        'base': '自己表現力に長け、自然と人が集まる華やかなオーラを放っています。あなたの言葉やセンスは、無意識のうちに他者に強い影響を与えます。',
-        'today': 'あなたの発言やアイデアに注目が集まる日です。SNSでの発信や、会議での提案など、内に秘めず「外に向けてアピールする」ことが吉です。'
+        'base_high': '自己表現力に長け、自然と人が集まる華やかなオーラを放っています。あなたの言葉やセンスは、無意識のうちに他者に強い影響を与えます。',
+        'base_low': '自分の魅力や才能を外に向かってアピールするのが苦手で、正当な評価を得にくい損な役回りになりがちです。',
+        'today_high': 'あなたの発言やアイデアに注目が集まる日です。SNSでの発信や、会議での提案など、内に秘めず「外に向けてアピールする」ことが吉です。',
+        'today_low': '目立つ行動が反感を買いやすい星回りです。今日は黒子に徹し、周囲のサポートに回ることで逆に信頼残高が蓄積されます。'
     },
     '4': {
-        'base': '精神的・肉体的なバランス感覚に優れ、絶対にブレない強固な土台を築く力があります。長期戦になるほど、あなたの堅実さが勝利を生みます。',
-        'today': '無理な背伸びをせず、足場を固めるのに最適な日。いつものルーティンワークを淡々とこなすことで、逆に運気が底上げされていきます。'
+        'base_high': '精神的・肉体的なバランス感覚に優れ、絶対にブレない強固な土台を築く力があります。長期戦になるほど、あなたの堅実さが勝利を生みます。',
+        'base_low': '気分の浮き沈みが激しく、環境の変化によって体調やメンタルが左右されやすい脆さを秘めています。ルーティンの構築が課題です。',
+        'today_high': '無理な背伸びをせず、足場を固めるのに最適な日。いつものルーティンワークを淡々とこなすことで、逆に運気が底上げされていきます。',
+        'today_low': '疲労やストレスが限界に達する一歩手前です。今日は予定を詰め込まず、意識的に休息を取ることを最優先にしてください。'
     },
     '5': {
-        'base': 'ひとつの場所に留まらず、常に新しい刺激を求めて進化し続けるフットワークの軽さが武器です。変化を恐れず、常に最前線を走り続けます。',
-        'today': '「いつもと違う選択」が幸運を呼ぶ日。通ったことのない道を歩く、普段見ないジャンルの情報に触れるなど、小さな変化を起こしましょう。'
+        'base_high': 'ひとつの場所に留まらず、常に新しい刺激を求めて進化し続けるフットワークの軽さが武器です。変化を恐れず、最前線を走り続けます。',
+        'base_low': '未知の領域に踏み出すことに強い警戒心を抱き、現状維持を好む傾向があります。その結果、チャンスを逃してしまうことも。',
+        'today_high': '「いつもと違う選択」が幸運を呼ぶ日。通ったことのない道を歩く、普段見ないジャンルの情報に触れるなど、小さな変化を起こしましょう。',
+        'today_low': '今日は急な予定変更や新しい挑戦は控えるべき日。不測の事態に弱くなっているため、慣れ親しんだ安全なやり方を貫いてください。'
     },
     '6': {
-        'base': '身近な人を深く愛し、守り抜く強さと圧倒的な包容力を持っています。あなたの周りには、あなたを深く信頼する絶対的な味方が集まります。',
-        'today': 'プライベートな空間や、ごく親しい人との時間が最大のエネルギー源になる日。今日は外での勝負より、内側の人間関係を大切にしてください。'
+        'base_high': '身近な人を深く愛し、守り抜く強さと圧倒的な包容力を持っています。あなたの周りには、深く信頼する絶対的な味方が集まります。',
+        'base_low': '身内や身近な人に対してドライになりすぎたり、逆に依存しすぎたりと、愛情のバランスを取るのがやや苦手な傾向があります。',
+        'today_high': 'プライベートな空間や、ごく親しい人との時間が最大のエネルギー源になる日。今日は外での勝負より、内側の人間関係を大切に。',
+        'today_low': '身近な人（家族やパートナー）との間に冷たい隙間風が吹きやすい日。理詰めでの会話は避け、共感の姿勢を示すことが重要です。'
     },
     '7': {
-        'base': '物事の本質を見抜く鋭い観察眼と、長期的な利益を緻密に計算できるロジカルな頭脳を持っています。感情に流されない冷徹な分析が最大の武器です。',
-        'today': '冷静な判断が冴え渡る日。大きな買い物や、将来への投資（自己投資や学習含む）、計画の見直しなど、頭を使う作業が最高の結果を生みます。'
+        'base_high': '物事の本質を見抜く鋭い観察眼と、長期的な利益を緻密に計算できるロジカルな頭脳を持っています。冷徹な分析が最大の武器です。',
+        'base_low': '感情や直感に流されやすく、データに基づいた客観的な判断を後回しにしがちです。思い込みで突っ走る危うさがあります。',
+        'today_high': '冷静な判断が冴え渡る日。大きな買い物や、将来への投資、計画の見直しなど、頭を使う作業が最高の結果を生みます。',
+        'today_low': '情報に振り回され、判断力が著しく低下しています。今日はお金が絡む決断や、重要な契約・投資は見送るのが賢明です。'
     },
     '8': {
-        'base': '物質的な豊かさを引き寄せ、社会的成功を収めるための強い引力を持っています。目標を達成するための執念と、結果を出す力は群を抜いています。',
-        'today': '努力が「目に見える形（評価や利益）」になりやすい最高の日。遠慮は一切不要です。今日は貪欲に、自分の手柄や結果を求めて動いてください。'
+        'base_high': '物質的な豊かさを引き寄せ、社会的成功を収める強い引力を持っています。目標を達成するための執念と、結果を出す力は群を抜いています。',
+        'base_low': '利益に対する執着が薄く、せっかくのチャンスを他人に譲ってしまいがち。結果的に豊かさが手元に残りづらい傾向があります。',
+        'today_high': '努力が「目に見える形（評価や利益）」になりやすい最高の日。遠慮は一切不要です。今日は貪欲に、自分の手柄や結果を求めて動いてください。',
+        'today_low': '予期せぬ出費や、努力が空回りしやすい日。利益を追求するほどドツボにハマるため、今日は無償の奉仕や「与える」ことに専念しましょう。'
     },
     '9': {
-        'base': '既存の常識に囚われず、圧倒的な存在感で他者を導く天性のカリスマ性とリーダーシップを持っています。あなたの一挙手一投足が時代の基準になります。',
-        'today': 'あなたの存在そのものが周囲の空気を支配する日。誰かの顔色を伺う必要はありません。自信を持って堂々と振る舞うだけで、全てが思い通りに動きます。'
+        'base_high': '既存の常識に囚われず、圧倒的な存在感で他者を導く天性のカリスマ性とリーダーシップを持っています。あなたの一挙手一投足が時代の基準に。',
+        'base_low': '他者の視線を過剰に気にしてしまい、自分らしさを封印しがちです。本来の個性を出すことに強い内的ブロックがかかっています。',
+        'today_high': 'あなたの存在そのものが周囲の空気を支配する日。誰かの顔色を伺う必要はありません。自信を持って堂々と振る舞うだけで、全てが思い通りに。',
+        'today_low': '権力や強い影響力を持つ人物と衝突しやすい日。今日はあなたが前に出るのではなく、ナンバーツーのポジションで立ち回るのが最も安全です。'
     }
 }
 
@@ -137,13 +160,14 @@ with st.container():
 
     dob = st.date_input("生年月日", min_value=datetime.date(1900, 1, 1), value=datetime.date(2000, 1, 1))
 
-    st.subheader("【追加情報（デバフ判定用）】")
+    # UIの表現をマイルドに修正
+    st.subheader("【追加情報（より深く運命を読み解く）】")
     col3, col4 = st.columns(2)
     with col3:
         time_unknown = st.checkbox("出生時間が不明")
         tob = st.time_input("出生時間", value=datetime.time(12, 0), step=60, disabled=time_unknown)
     with col4:
-        blood_type = st.selectbox("血液型", ["A型", "B型", "O型", "AB型", "不明（ペナルティ）"], index=4)
+        blood_type = st.selectbox("血液型", ["A型", "B型", "O型", "AB型", "不明"], index=4)
 
     predict_button = st.button("運命を解析する")
 
@@ -151,6 +175,7 @@ with st.container():
 if predict_button:
     now = datetime.datetime.now()
 
+    # --- 宿命（ベース）の計算 ---
     year = dob.year
     month_day = int(dob.strftime('%m%d'))
     val_dob = abs(year - month_day)
@@ -178,9 +203,22 @@ if predict_button:
             debuff += 0.5
         scores[digit] = max(0.0, scores[digit] - debuff)
 
-    resonance = calc_resonance(dob, tob, time_unknown)
-    final_scores = {digit: (s * 0.5 + s * resonance * 0.5) for digit, s in scores.items()}
+    # --- NEW: クリックした「年月日時分」によるダイナミックバフの適用 ---
+    # アクセス時間とユーザー固有情報から、今回限りの強力なシードを生成
+    seed_str = f"{now.strftime('%Y%m%d%H%M')}_{hash_str}"
+    seed_int = int(hashlib.md5(seed_str.encode()).hexdigest()[:8], 16)
+    random.seed(seed_int)
 
+    final_scores = {}
+    for digit, base_s in scores.items():
+        # アクセスタイミングによって -1.5 〜 +2.5 の間で激しく運勢が変動（バフ）
+        buff = random.uniform(-1.5, 2.5)
+        f_score = base_s + buff
+        # 必ず 0.0 〜 5.0 の枠に収める
+        final_scores[digit] = max(0.0, min(5.0, f_score))
+
+    # 演出用の共鳴係数
+    resonance = calc_resonance(dob, tob, time_unknown)
     resonance_pct = resonance * 100
     if resonance_pct >= 75:
         resonance_label, resonance_color = "極めて強い共鳴 ✨", "#d4af37"
@@ -193,11 +231,11 @@ if predict_button:
 
     st.markdown(f"""
     <div class="resonance-box">
-        <div class="resonance-title">▶ 今日の宿命共鳴</div>
-        <div class="resonance-value" style="color:{resonance_color}">{resonance_pct:.1f}%　<span style="font-size:0.5em">{resonance_label}</span></div>
+        <div class="resonance-title">▶ 今日の星回り（バフ適用）</div>
+        <div class="resonance-value" style="color:{resonance_color}">{now.strftime('%H:%M')} の運気波動</div>
         <div class="resonance-sub">
             {now.strftime('%Y/%m/%d %H:%M')} に扉を開いた。<br>
-            この数値は今日限り。最初の結果だけが、宿命の本当の声。
+            アクセスした瞬間の時間が、あなたの宿命に強烈なバフを与えています。
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -223,7 +261,7 @@ if predict_button:
         fillcolor='rgba(212, 175, 55, 0.4)',
         line=dict(color='#d4af37', width=2),
         marker=dict(color='#d4af37', size=8),
-        name='今日の波形'
+        name='今の運勢'
     ))
 
     fig.update_layout(
@@ -248,44 +286,32 @@ if predict_button:
     if final_max_val > 0:
         st.markdown("---")
         
-        # サマリー表示（トップの能力）
         base_top_traits = [fortune_map[k] for k, v in scores.items() if v == base_max_val]
         final_top_traits = [fortune_map[k] for k, v in final_scores.items() if v == final_max_val]
-        st.info(f"**👑 【生来の最大の武器】** {' / '.join(base_top_traits)} （ベーススコア: {base_max_val:.2f}）")
-        st.success(f"**🎯 【今日の最大の武器】** {' / '.join(final_top_traits)} （最終スコア: {final_max_val:.2f} / 5.0）")
+        st.info(f"**👑 【生来の最大の武器】** {' / '.join(base_top_traits)} （ベース: {base_max_val:.2f}）")
+        st.success(f"**🎯 【今の最強ステータス】** {' / '.join(final_top_traits)} （現在: {final_max_val:.2f} / 5.0）")
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📜 全パラメータ詳細解析")
-        st.write("あなたの持つすべての宿命要素と、星との共鳴による本日の状態を解説します。（今日のスコアが高い順）")
+        st.write("あなたの持つすべての宿命要素と、今の時間のバフを受けた状態を解説します。（現在のスコアが高い順）")
 
-        # 今日のスコア（final_scores）が高い順にキーをソート
         sorted_keys = sorted(final_scores.keys(), key=lambda x: final_scores[x], reverse=True)
 
-        # 全10項目をアコーディオン（expander）で展開
         for k in sorted_keys:
             trait_name = fortune_map[k]
             b_score = scores[k]
             f_score = final_scores[k]
             
-            # アコーディオンのタイトル（例: ■ カリスマ （本来: 4.50 ➔ 今日: 4.80））
-            with st.expander(f"■ {trait_name} （本来: {b_score:.2f} ➔ 今日: {f_score:.2f}）"):
-                # 本来の宿命の解説
+            # スコアが3.0以上か未満かで、テキストを分岐取得
+            b_text = trait_details[k]['base_high'] if b_score >= 3.0 else trait_details[k]['base_low']
+            f_text = trait_details[k]['today_high'] if f_score >= 3.0 else trait_details[k]['today_low']
+            
+            with st.expander(f"■ {trait_name} （本来: {b_score:.2f} ➔ 現在: {f_score:.2f}）"):
                 st.markdown(f"<div class='detail-label'>本来の宿命（ベーススコア: {b_score:.2f}）</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='detail-text'>{trait_details[k]['base']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-text'>{b_text}</div>", unsafe_allow_html=True)
                 
-                # 今日の運勢の解説
-                st.markdown(f"<div class='detail-label-today'>今日の運勢（最終スコア: {f_score:.2f}）</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='detail-text'>{trait_details[k]['today']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-label-today'>今の運勢（最終スコア: {f_score:.2f}）</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-text'>{f_text}</div>", unsafe_allow_html=True)
 
-        # 総合評価メッセージ
-        st.markdown("---")
-        if resonance_pct >= 75:
-            st.success("✨ 今日は星との共鳴が極めて強い。この結果を信じよ。")
-        elif resonance_pct >= 50:
-            st.info("🌙 良好な共鳴。今日の結果は概ね信頼できる。")
-        elif resonance_pct >= 25:
-            st.warning("🌫️ 共鳴はやや弱い。今日は本来の力が出し切れていないかもしれない。")
-        else:
-            st.error("🌑 宿命との乖離が大きい日。逆らわず、流れに身を任せよ。")
     else:
         st.warning("⚠️ スコアが算出できませんでした。入力情報を確認してください。")
