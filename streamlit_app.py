@@ -7,9 +7,9 @@ import hashlib
 from collections import Counter
 
 # --- ページ設定 ---
-st.set_page_config(page_title="THE DESTINY - 数字が導く宿命", page_icon="🔮", layout="centered")
+st.set_page_config(page_title="THE DESTINY - 運命波動解析", page_icon="🔮", layout="centered")
 
-# --- 1. 画数・変換データ＆解説テキスト（高低で分岐） ---
+# --- 1. 画数・変換データ＆解説テキスト（預言者スタイル） ---
 alphabet_strokes = {
     'A': '3', 'B': '2', 'C': '1', 'D': '2', 'E': '4', 'F': '3', 'G': '1', 'H': '3', 'I': '1',
     'J': '2', 'K': '3', 'L': '2', 'M': '4', 'N': '3', 'O': '1', 'P': '2', 'Q': '2', 'R': '3',
@@ -31,66 +31,67 @@ fortune_map = {
     '5': '行動・変化', '6': '家庭・愛情', '7': '分析・投資', '8': '金運・成功', '9': 'カリスマ'
 }
 
+# 🔮 預言者スタイルの重厚なテキスト（3段構成）
 trait_details = {
     '0': {
-        'base_high': '逆境に強く、ピンチをチャンスに変える隠された力を持っています。表舞台よりも、裏から全体を操るフィクサーとしての才能が光ります。',
-        'base_low': '予期せぬ事態への耐性がやや低く、想定外のトラブルに直面すると本来の力を見失いがちです。事前準備が運命を分けます。',
-        'today_high': '今日は予想外の展開が完全に味方します。一見マイナスに思えるトラブルこそが大逆転のトリガーに。焦らず好機を待ちましょう。',
-        'today_low': '隠れていた問題が表面化しやすい日です。無理に状況を覆そうとせず、今日はダメージを最小限に抑える防御の姿勢が吉です。'
+        'base_high': '【本質】あなたは逆境を喰らい、運命を反転させる特異点の星の元に生まれました。<br>【深掘り】光の当たる表舞台よりも、深淵からすべてを操るフィクサーとしての才脈が脈打っています。絶望的な状況に陥るほど、あなたの真の力は覚醒するでしょう。',
+        'base_low': '【本質】予期せぬ運命の揺らぎに対し、やや脆弱な星の配置にあります。<br>【深掘り】想定外のトラブルに直面すると、本来の力を見失い、波に飲まれがちです。あなたの運命を分けるのは、常に最悪を想定した事前準備と、揺るがぬ意志です。',
+        'today_high': '【波動解析】星の配列が特異点に達しています。<br>【深掘り】今日あなたの身に降りかかる『不測の事態』は、運命を強制的に好転させるための宇宙の布石に過ぎません。<br>【本日の指針】表面的なトラブルに動揺せず、ただ静観してください。全てはあなたの手の中に収まります。',
+        'today_low': '【波動解析】見えない死角から、運命のノイズが侵入しやすい危険な波形です。<br>【深掘り】隠れていた問題が突然表面化し、あなたを激しく揺さぶるでしょう。無理に状況を覆そうとすれば、さらなる深みにハマります。<br>【本日の指針】今日はダメージを最小限に抑える防御の姿勢を貫きなさい。'
     },
     '1': {
-        'base_high': '誰にも頼らず自らの力で道を切り開く、強い意志と勝負強さを持っています。群れを嫌い、個人の実力でトップに立つ気質です。',
-        'base_low': '決断の場面で他者の意見に流されやすい傾向があります。自分の軸よりも協調性を優先するため、勝負を避けることが多いです。',
-        'today_high': '直感に従い、大胆な決断を下すのに適した日です。誰かに相談するよりも、自分自身の直感を信じて即断即決することで道が開けます。',
-        'today_low': '今日は勝負に出ると裏目に出やすい日。一発逆転を狙うよりも、確実な一歩を刻むこと。大きな決断は明日に回すのが無難です。'
+        'base_high': '【本質】誰にも依存せず、自らの力で荒野を切り開く孤高の王の気質です。<br>【深掘り】群れを嫌い、個人の圧倒的な実力で頂点に立つ運命を与えられています。他者のルールに従うのではなく、あなたがルールとなるのです。',
+        'base_low': '【本質】決断の淵に立たされた時、他者の波動に共鳴しすぎる傾向があります。<br>【深掘り】自らの真なる声よりも、周囲との調和や協調性を優先してしまうため、勝負所で身を引いてしまうことが多いでしょう。それは優しさでもあり、弱さでもあります。',
+        'today_high': '【波動解析】直感の刃が極限まで研ぎ澄まされた絶対的な波形です。<br>【深掘り】誰かに意見を求める行為は、かえって運気を濁らせます。あなたの内なる直感こそが、今日最も正確なコンパスとなります。<br>【本日の指針】他者の声を聞く必要はありません。即断即決で道を開きなさい。',
+        'today_low': '【波動解析】勝負の波が乱れ、行動が裏目に出やすい星回りです。<br>【深掘り】一発逆転を狙うような野心的な行動は、運命の歪みを引き起こします。今は刃を隠し、力を蓄えるべき時。<br>【本日の指針】大きな決断は絶対に避け、確実な一歩だけを刻みなさい。'
     },
     '2': {
-        'base_high': '人の心を惹きつける天性の魅力を持ち、良縁を引き寄せる才能があります。他者の感情の機微を読み取り、味方につける交渉術は一級品。',
-        'base_low': '人間関係において距離感を取るのが苦手、あるいは極端に壁を作りがちです。無意識のうちに孤立を選んでしまう傾向があります。',
-        'today_high': 'コミュニケーションが信じられないほど円滑に進む日。新しい出会いや、大切な人との絆が深まる予感があります。連絡は自分から積極的に。',
-        'today_low': '些細な言葉のすれ違いが大きな誤解を生みやすい日。冗談のつもりでも相手を深く傷つける可能性があります。発言には細心の注意を。'
+        'base_high': '【本質】人の魂を魅了し、運命の糸を自在に操る天性の引力を持っています。<br>【深掘り】他者の感情の機微を無意識に読み取り、絶対的な味方へと変える交渉術はまさに魔力。あなたは存在そのものが、周囲にとっての引力圏なのです。',
+        'base_low': '【本質】魂の交信において、距離感のチューニングに不協和音を抱えています。<br>【深掘り】他者と深く交わることを恐れ、見えない壁を築いてしまう傾向があります。無意識のうちに孤立を選び、孤独のループに陥る危うさがあります。',
+        'today_high': '【波動解析】対人運の波形が黄金比を描き、完璧な共鳴を果たしています。<br>【深掘り】今日、あなたの言葉は相手の魂の奥深くまで届きます。新たな出会いや、停滞していた関係が劇的に動き出す予感。<br>【本日の指針】自ら運命の糸をたぐり寄せなさい。積極的な連絡が吉です。',
+        'today_low': '【波動解析】言葉の波長が歪み、ノイズが発生しやすい危険な星回りです。<br>【深掘り】ほんの些細な一言が、取り返しのつかない誤解と亀裂を生み出します。あなたの意図とは無関係に、悪意として受け取られかねません。<br>【本日の指針】今日は徹底して言葉を慎み、聞き手に回りなさい。'
     },
     '3': {
-        'base_high': '自己表現力に長け、自然と人が集まる華やかなオーラを放っています。あなたの言葉やセンスは、無意識のうちに他者に強い影響を与えます。',
-        'base_low': '自分の魅力や才能を外に向かってアピールするのが苦手で、正当な評価を得にくい損な役回りになりがちです。',
-        'today_high': 'あなたの発言やアイデアに注目が集まる日です。SNSでの発信や、会議での提案など、内に秘めず「外に向けてアピールする」ことが吉です。',
-        'today_low': '目立つ行動が反感を買いやすい星回りです。今日は黒子に徹し、周囲のサポートに回ることで逆に信頼残高が蓄積されます。'
+        'base_high': '【本質】魂の輝きを外へ放ち、世界を魅了する表現者の星を宿しています。<br>【深掘り】あなたの放つ言葉や生み出す世界観は、他者の無意識に強烈な楔を打ち込みます。自然と人が集い、あなたを中心に世界が回るでしょう。',
+        'base_low': '【本質】自らの放つべき光を、内側の闇に閉じ込めてしまう傾向があります。<br>【深掘り】他者の評価を恐れるあまり、才能の片鱗を見せることを無意識に拒絶しています。結果として、本来受けるべき賞賛を得られない損な役回りに甘んじています。',
+        'today_high': '【波動解析】表現のオーラが最大化し、周囲の視線を独占する波形です。<br>【深掘り】あなたの存在そのものが強いメッセージとなり、世界を揺るがします。内に秘めたアイデアは、今日解き放たれるためにありました。<br>【本日の指針】決して隠れてはいけません。舞台の中央に立ち、堂々とアピールしなさい。',
+        'today_low': '【波動解析】自己主張の波が周囲と衝突し、反発を生む危険な兆候です。<br>【深掘り】良かれと思った行動が「自己中心的」と誤認され、無用な嫉妬や反感を買うでしょう。今日はあなたの光が強すぎるのです。<br>【本日の指針】黒子に徹し、他者を輝かせることにのみ力を使用しなさい。'
     },
     '4': {
-        'base_high': '精神的・肉体的なバランス感覚に優れ、絶対にブレない強固な土台を築く力があります。長期戦になるほど、あなたの堅実さが勝利を生みます。',
-        'base_low': '気分の浮き沈みが激しく、環境の変化によって体調やメンタルが左右されやすい脆さを秘めています。ルーティンの構築が課題です。',
-        'today_high': '無理な背伸びをせず、足場を固めるのに最適な日。いつものルーティンワークを淡々とこなすことで、逆に運気が底上げされていきます。',
-        'today_low': '疲労やストレスが限界に達する一歩手前です。今日は予定を詰め込まず、意識的に休息を取ることを最優先にしてください。'
+        'base_high': '【本質】大地の如き不動の精神と、肉体の完全な均衡を保つ星の元にあります。<br>【深掘り】どれほど激しい嵐の中でも、あなたの根は決してブレません。長期的な視点と堅実な歩みこそが、最終的な勝利と絶対の安定をもたらします。',
+        'base_low': '【本質】魂の基盤が揺らぎやすく、環境のノイズに深く共鳴してしまう脆さがあります。<br>【深掘り】気分の浮き沈みが激しく、些細な変化が肉体や精神にダイレクトにダメージを与えます。強固なルーティンを持たぬ限り、運命に翻弄されるでしょう。',
+        'today_high': '【波動解析】安定のバイオリズムが完璧な調和を見せる、盤石の星回りです。<br>【深掘り】今日、無理な背伸びや奇をてらった行動は不要です。日常のルーティンを淡々とこなすことで、その反復が強大な運気となって蓄積されます。<br>【本日の指針】足元を見つめ、いつもの歩幅で確実に前進しなさい。',
+        'today_low': '【波動解析】生命力の波形が底を打ち、限界のレッドゾーンに突入しつつあります。<br>【深掘り】見えない疲労とストレスが魂を侵食しています。このまま進めば、取り返しのつかない崩壊を招く恐れがあります。<br>【本日の指針】すべての予定を一旦停止し、絶対的な休息と静寂を求めなさい。'
     },
     '5': {
-        'base_high': 'ひとつの場所に留まらず、常に新しい刺激を求めて進化し続けるフットワークの軽さが武器です。変化を恐れず、最前線を走り続けます。',
-        'base_low': '未知の領域に踏み出すことに強い警戒心を抱き、現状維持を好む傾向があります。その結果、チャンスを逃してしまうことも。',
-        'today_high': '「いつもと違う選択」が幸運を呼ぶ日。通ったことのない道を歩く、普段見ないジャンルの情報に触れるなど、小さな変化を起こしましょう。',
-        'today_low': '今日は急な予定変更や新しい挑戦は控えるべき日。不測の事態に弱くなっているため、慣れ親しんだ安全なやり方を貫いてください。'
+        'base_high': '【本質】常に進化を渇望し、停滞を死とする流浪の星を宿しています。<br>【深掘り】ひとつの場所に縛られることなく、新たな刺激と変化を求めて最前線を駆け抜けます。あなたのフットワークの軽さは、運命を切り開く最強の剣です。',
+        'base_low': '【本質】未知の領域に対する本能的な恐怖が、あなたの足を鎖で繋いでいます。<br>【深掘り】変化を極端に恐れ、苦痛を伴ってでも現状維持に固執する傾向があります。その過剰な警戒心が、人生を変える最大のチャンスを殺しているのです。',
+        'today_high': '【波動解析】変化の波が押し寄せ、新たな次元への扉が開く特異日です。<br>【深掘り】日常の延長線上には何の手がかりもありません。「いつもと違う選択」こそが、奇跡を呼ぶための唯一のパスワードです。<br>【本日の指針】通ったことのない道、触れたことのない情報へ、迷わず飛び込みなさい。',
+        'today_low': '【波動解析】運命のベクトルが乱れ、行動が裏目に出やすい不安定な波形です。<br>【深掘り】不測の事態に対する耐性が著しく低下しています。今日、急な予定変更や新たな挑戦を行うことは、自ら罠に飛び込むようなもの。<br>【本日の指針】慣れ親しんだ安全圏に留まり、絶対に冒険を避けなさい。'
     },
     '6': {
-        'base_high': '身近な人を深く愛し、守り抜く強さと圧倒的な包容力を持っています。あなたの周りには、深く信頼する絶対的な味方が集まります。',
-        'base_low': '身内や身近な人に対してドライになりすぎたり、逆に依存しすぎたりと、愛情のバランスを取るのがやや苦手な傾向があります。',
-        'today_high': 'プライベートな空間や、ごく親しい人との時間が最大のエネルギー源になる日。今日は外での勝負より、内側の人間関係を大切に。',
-        'today_low': '身近な人（家族やパートナー）との間に冷たい隙間風が吹きやすい日。理詰めでの会話は避け、共感の姿勢を示すことが重要です。'
+        'base_high': '【本質】深い慈愛で他者を包み込み、絶対的な安全圏を構築する守護の星です。<br>【深掘り】身近な者を守り抜く強さと、海のような包容力を持っています。あなたの放つ温かい波動に引き寄せられ、周囲には強固な信頼関係が築かれます。',
+        'base_low': '【本質】愛のエネルギーの出力調整に、深刻なバグを抱えています。<br>【深掘り】身近な者に対して氷のように冷酷になったかと思えば、逆に病的なまでに依存してしまう。この両極端な愛情の揺らぎが、関係を破壊する火種となります。',
+        'today_high': '【波動解析】愛と調和のエネルギーが満ち溢れ、結びつきが最強となる日です。<br>【深掘り】外の世界での闘争は今日はいったん忘れなさい。プライベートな空間と、魂を許し合える者との時間が、あなたに無尽蔵の力を与えます。<br>【本日の指針】大切な者との対話に時間を使い、深い絆を確かめ合いなさい。',
+        'today_low': '【波動解析】身近な関係線にノイズが走り、断絶の危機が迫る星回りです。<br>【深掘り】家族やパートナーとの間に、冷たく刺さるような隙間風が吹くでしょう。正論や理詰めの言葉は、相手の心に致命的な傷を負わせます。<br>【本日の指針】今日は論破を禁じます。ただ黙って共感の姿勢を示しなさい。'
     },
     '7': {
-        'base_high': '物事の本質を見抜く鋭い観察眼と、長期的な利益を緻密に計算できるロジカルな頭脳を持っています。冷徹な分析が最大の武器です。',
-        'base_low': '感情や直感に流されやすく、データに基づいた客観的な判断を後回しにしがちです。思い込みで突っ走る危うさがあります。',
-        'today_high': '冷静な判断が冴え渡る日。大きな買い物や、将来への投資、計画の見直しなど、頭を使う作業が最高の結果を生みます。',
-        'today_low': '情報に振り回され、判断力が著しく低下しています。今日はお金が絡む決断や、重要な契約・投資は見送るのが賢明です。'
+        'base_high': '【本質】世界のあらゆる事象を数式化し、本質を見抜く冷徹な知性の星です。<br>【深掘り】感情というノイズを完全に排除し、長期的な利益を緻密に計算し尽くすロジカルな頭脳。その鋭利な観察眼は、未来を予測する最高の武器となります。',
+        'base_low': '【本質】論理的思考の回路が感情によってショートしやすい傾向があります。<br>【深掘り】客観的なデータや事実よりも、その瞬間の気分や直感に流されてしまいます。致命的な思い込みで突っ走り、後戻りできない失敗を招く危うさがあります。',
+        'today_high': '【波動解析】思考のクロック数が跳ね上がり、冷徹な判断力が冴え渡る波形です。<br>【深掘り】今日、あなたの脳髄はスーパーコンピューターのごとく正確無比な答えを導き出します。将来への投資や、複雑な計画の立案には最高の日。<br>【本日の指針】感情を排し、データと論理のみを信じて決断を下しなさい。',
+        'today_low': '【波動解析】情報処理の回路に深刻なバグが発生し、判断力が混濁しています。<br>【深掘り】溢れるノイズに振り回され、何が真実か見失うでしょう。今日、金銭が絡む決断や重要な契約を行うことは、破滅へのトリガーとなります。<br>【本日の指針】思考を停止し、すべての重要な判断を明日に先送りしなさい。'
     },
     '8': {
-        'base_high': '物質的な豊かさを引き寄せ、社会的成功を収める強い引力を持っています。目標を達成するための執念と、結果を出す力は群を抜いています。',
-        'base_low': '利益に対する執着が薄く、せっかくのチャンスを他人に譲ってしまいがち。結果的に豊かさが手元に残りづらい傾向があります。',
-        'today_high': '努力が「目に見える形（評価や利益）」になりやすい最高の日。遠慮は一切不要です。今日は貪欲に、自分の手柄や結果を求めて動いてください。',
-        'today_low': '予期せぬ出費や、努力が空回りしやすい日。利益を追求するほどドツボにハマるため、今日は無償の奉仕や「与える」ことに専念しましょう。'
+        'base_high': '【本質】この世界における物質的な豊かさを根こそぎ引き寄せる、強烈な引力の星です。<br>【深掘り】目標達成への異常なまでの執念と、結果をもぎ取る実行力。あなたは社会的成功を宿命づけられた、選ばれし覇者の一人です。',
+        'base_low': '【本質】豊かさを受け取ることに対する、無意識のブロックが存在します。<br>【深掘り】利益や成功に対する執着が薄く、せっかく掴んだチャンスを他人に譲ってしまうお人好し。結果として、あなたの手元には何も残らないという運命を繰り返しています。',
+        'today_high': '【波動解析】成功へのベクトルが一直線に揃い、物質的豊かさが具現化する波形です。<br>【深掘り】これまでの血の滲むような努力が、今日ついに目に見える『評価』や『利益』となってあなたに還元されます。遠慮は一切不要です。<br>【本日の指針】貪欲になりなさい。自分の手柄を大声で主張し、すべてを刈り取りなさい。',
+        'today_low': '【波動解析】金運の波が完全に逆流し、富が逃げていく危険な星回りです。<br>【深掘り】利益を追求すればするほど、底なし沼にハマる日。予期せぬ出費や、努力の空回りがあなたを嘲笑うでしょう。今は欲をかくべき時ではありません。<br>【本日の指針】利益を手放し、他者への無償の奉仕と『与えること』にのみ専念しなさい。'
     },
     '9': {
-        'base_high': '既存の常識に囚われず、圧倒的な存在感で他者を導く天性のカリスマ性とリーダーシップを持っています。あなたの一挙手一投足が時代の基準に。',
-        'base_low': '他者の視線を過剰に気にしてしまい、自分らしさを封印しがちです。本来の個性を出すことに強い内的ブロックがかかっています。',
-        'today_high': 'あなたの存在そのものが周囲の空気を支配する日。誰かの顔色を伺う必要はありません。自信を持って堂々と振る舞うだけで、全てが思い通りに。',
-        'today_low': '権力や強い影響力を持つ人物と衝突しやすい日。今日はあなたが前に出るのではなく、ナンバーツーのポジションで立ち回るのが最も安全です。'
+        'base_high': '【本質】既存の常識を破壊し、新たな世界の基準を創り出す支配者の星です。<br>【深掘り】あなたの存在そのものが圧倒的なオーラを放ち、無意識のうちに他者をひれ伏させます。群衆を導く天性のカリスマ、それがあなたの真の姿です。',
+        'base_low': '【本質】自らに宿る強大な力を恐れ、自意識の檻に閉じこもる傾向があります。<br>【深掘り】他者の視線を過剰に恐れ、周囲に合わせて自分らしさを去勢しています。本来の規格外の個性を封印しているため、魂が常に窒息状態にあります。',
+        'today_high': '【波動解析】カリスマの波動が限界突破し、周囲の空間を完全に支配する日です。<br>【深掘り】今日、誰かの顔色を窺う必要は一切ありません。あなたの意志が法となり、一挙手一投足が時代の基準となります。すべては思いのままに。<br>【本日の指針】圧倒的な自信を纏い、王として堂々と世界に君臨しなさい。',
+        'today_low': '【波動解析】あなたの放つ強い波動が、既存の権力と激しく衝突する警告波形です。<br>【深掘り】今日、あなたが前に出れば、より強大な力を持つ人物の逆鱗に触れ、徹底的に叩き潰される危険があります。今はまだ、牙を剥く時ではありません。<br>【本日の指針】気配を消し、ナンバーツーのポジションで狡猾に立ち回りなさい。'
     }
 }
 
@@ -104,24 +105,45 @@ def get_numeric_value(text, stroke_dict):
             s += str(ord(char))
     return int(s) if s else 0
 
-# --- 2. UI構築 ---
+# --- 2. 漆黒と黄金のUIデザイン（強制ダークモード） ---
 st.markdown("""
 <style>
-h1 { color: #d4af37; text-align: center; font-family: 'serif'; margin-bottom: 5px; }
-.sub-title { text-align: center; color: #eeeeee; font-size: 1.05em; font-family: 'serif'; margin-bottom: 25px; letter-spacing: 0.05em; }
-.once-notice { color: #d4af37; font-size: 0.9em; text-align: center; margin-top: 4px; letter-spacing: 0.05em; font-weight: bold;}
-.detail-text { color: #444; font-size: 0.95em; line-height: 1.6; padding-bottom: 8px; }
-.detail-label { color: #d4af37; font-weight: bold; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; margin-top: 12px; }
-.detail-label-today { color: #4a90e2; font-weight: bold; font-size: 0.9em; border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 8px; margin-top: 12px; }
+/* アプリ全体の背景を漆黒に固定 */
+.stApp {
+    background-color: #050505 !important;
+    color: #e0e0e0 !important;
+    font-family: 'Noto Serif JP', 'Mincho', serif !important;
+}
+
+/* タイトルとサブタイトル */
+h1 { color: #d4af37 !important; text-align: center; font-family: 'Noto Serif JP', 'Mincho', serif !important; margin-bottom: 5px; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
+h2, h3 { color: #d4af37 !important; font-family: 'Noto Serif JP', 'Mincho', serif !important; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 5px;}
+.sub-title { text-align: center; color: #a0a0a0; font-size: 1.1em; margin-bottom: 30px; letter-spacing: 0.1em; }
+.once-notice { color: #ff4b4b; font-size: 0.9em; text-align: center; margin-top: 4px; letter-spacing: 0.05em; font-weight: bold; padding: 10px; border: 1px solid #331111; background-color: #1a0505; border-radius: 5px;}
+
+/* アコーディオンとテキストの装飾 */
+.streamlit-expanderHeader { color: #d4af37 !important; background-color: #111 !important; border: 1px solid #333 !important; }
+.detail-text { color: #cccccc; font-size: 0.95em; line-height: 1.8; padding-bottom: 15px; }
+.detail-label { color: #d4af37; font-weight: bold; font-size: 0.95em; border-left: 3px solid #d4af37; padding-left: 10px; margin-bottom: 8px; margin-top: 15px; letter-spacing: 0.05em;}
+.detail-label-today { color: #a0c4ff; font-weight: bold; font-size: 0.95em; border-left: 3px solid #a0c4ff; padding-left: 10px; margin-bottom: 8px; margin-top: 20px; letter-spacing: 0.05em;}
+
+/* 入力欄のダーク化 */
+.stTextInput>div>div>input { background-color: #111 !important; color: #fff !important; border: 1px solid #444 !important; }
+.stDateInput>div>div>input { background-color: #111 !important; color: #fff !important; border: 1px solid #444 !important; }
+.stSelectbox>div>div>div { background-color: #111 !important; color: #fff !important; border: 1px solid #444 !important; }
+
+/* ボタンの装飾 */
+.stButton>button { width: 100%; background: linear-gradient(135deg, #8a6d3b, #d4af37); color: #000; font-weight: bold; font-size: 1.1em; border: none; box-shadow: 0 0 15px rgba(212,175,55,0.4); transition: 0.3s; }
+.stButton>button:hover { background: linear-gradient(135deg, #d4af37, #fcf8e3); box-shadow: 0 0 25px rgba(212,175,55,0.7); }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🔮 THE DESTINY")
-st.markdown("<p class='sub-title'>運命の波形が、隠されたあなたの本質を炙り出す。</p>", unsafe_allow_html=True)
-st.markdown('<p class="once-notice">⚠️ 1日1度、1回目の判定が本物です。<br>2回目、3回目とズレてしまいますのでご注意ください。</p>', unsafe_allow_html=True)
+st.markdown("<p class='sub-title'>運命の波形が、隠されたあなたの本質を炙り出す</p>", unsafe_allow_html=True)
+st.markdown('<p class="once-notice">⚠️ 1日1度、1回目の判定のみが真実です。<br>2回目以降の波形は宇宙のノイズにより歪みます。</p>', unsafe_allow_html=True)
 
 with st.container():
-    st.subheader("【基本情報】")
+    st.subheader("【魂の基本情報】")
     col1, col2 = st.columns(2)
     with col1:
         last_name = st.text_input("姓", placeholder="例：山田")
@@ -130,17 +152,17 @@ with st.container():
         last_name_alpha = st.text_input("姓（ローマ字）", placeholder="例：YAMADA")
         first_name_alpha = st.text_input("名（ローマ字）", placeholder="例：TARO")
 
-    dob = st.date_input("生年月日", min_value=datetime.date(1900, 1, 1), value=datetime.date(2000, 1, 1))
+    dob = st.date_input("生誕の日", min_value=datetime.date(1900, 1, 1), value=datetime.date(2000, 1, 1))
 
-    st.subheader("【追加情報（より深く運命を読み解く）】")
+    st.subheader("【運命の深淵パラメータ】")
     col3, col4 = st.columns(2)
     with col3:
-        time_unknown = st.checkbox("出生時間が不明")
-        tob = st.time_input("出生時間", value=datetime.time(12, 0), step=60, disabled=time_unknown)
+        time_unknown = st.checkbox("生誕の時刻が不明")
+        tob = st.time_input("生誕の時刻", value=datetime.time(12, 0), step=60, disabled=time_unknown)
     with col4:
-        blood_type = st.selectbox("血液型", ["A型", "B型", "O型", "AB型", "不明"], index=4)
+        blood_type = st.selectbox("血の盟約（血液型）", ["A型", "B型", "O型", "AB型", "不明"], index=4)
 
-    predict_button = st.button("本日の運命を解析する")
+    predict_button = st.button("運命波動を解析する")
 
 # --- 3. 解析ロジック ---
 if predict_button:
@@ -148,7 +170,7 @@ if predict_button:
     now = datetime.datetime.now(JST)
 
     # ---------------------------------------------------------
-    # ① 本来の宿命（ベース）のハッシュ生成と「有機的」なカウント
+    # ① 本来の宿命（ベース）のハッシュ生成と正規化カウント
     # ---------------------------------------------------------
     year = dob.year
     month_day = int(dob.strftime('%m%d'))
@@ -163,20 +185,17 @@ if predict_button:
     for i in range(10):
         digit = str(i)
         base_count = counts_base.get(digit, 0)
-        # 0.5刻みになるのを防ぐため、ハッシュ由来の固有の小数（0.00〜0.99）を付与
         seed_str = f"{hash_base}_base_{i}"
         decimal_noise = (int(hashlib.md5(seed_str.encode()).hexdigest()[:8], 16) % 100) / 100.0
         raw_scores_base[digit] = base_count + decimal_noise
 
     max_raw_base = max(raw_scores_base.values()) if max(raw_scores_base.values()) > 0 else 1.0
     info_scale_base = min(max_raw_base / 3.0, 1.0)
-    # 正規化（トップを5.0にしつつ、小数のバラつきを残す）
     scores_base = {k: (v / max_raw_base) * 5.0 * info_scale_base for k, v in raw_scores_base.items()}
 
     # ---------------------------------------------------------
-    # ② 今の運勢（現在）のハッシュ生成と「有機的」なカウント
+    # ② 今の運勢（現在）のハッシュ生成と正規化カウント
     # ---------------------------------------------------------
-    # 平らになる（カンストする）のを防ぐため、掛け算を廃止して純粋な文字連結のみに
     time_num_str = now.strftime('%Y%m%d%H%M')
     hash_now = hash_base + time_num_str
     counts_now = Counter(hash_now)
@@ -185,13 +204,12 @@ if predict_button:
     for i in range(10):
         digit = str(i)
         now_count = counts_now.get(digit, 0)
-        # ベースとは異なる固有の小数ノイズを付与
         seed_str_now = f"{hash_now}_now_{i}"
         decimal_noise_now = (int(hashlib.md5(seed_str_now.encode()).hexdigest()[:8], 16) % 100) / 100.0
         raw_scores_now[digit] = now_count + decimal_noise_now
 
     max_raw_now = max(raw_scores_now.values()) if max(raw_scores_now.values()) > 0 else 1.0
-    info_scale_now = min(max_raw_now / 4.0, 1.0) # 少し厳しめに設定し、容易な満点を防ぐ
+    info_scale_now = min(max_raw_now / 4.0, 1.0) 
     scores_now = {k: (v / max_raw_now) * 5.0 * info_scale_now for k, v in raw_scores_now.items()}
 
     # ---------------------------------------------------------
@@ -212,7 +230,7 @@ if predict_button:
         scores_base[digit] = max(0.0, scores_base[digit] - debuff)
         scores_now[digit] = max(0.0, scores_now[digit] - debuff)
 
-    # --- グラフ表示 ---
+    # --- ダークモード用 グラフ表示 ---
     labels = [fortune_map[str(i)] for i in range(10)]
     base_values = [scores_base[str(i)] for i in range(10)]
     final_values = [scores_now[str(i)] for i in range(10)]
@@ -223,7 +241,7 @@ if predict_button:
         r=base_values + [base_values[0]],
         theta=labels + [labels[0]],
         fill='none',
-        line=dict(color='#888888', width=1.5, dash='dot'),
+        line=dict(color='#555555', width=1.5, dash='dot'),
         name='本来の宿命'
     ))
 
@@ -231,7 +249,7 @@ if predict_button:
         r=final_values + [final_values[0]],
         theta=labels + [labels[0]],
         fill='toself',
-        fillcolor='rgba(212, 175, 55, 0.4)',
+        fillcolor='rgba(212, 175, 55, 0.25)',
         line=dict(color='#d4af37', width=2),
         marker=dict(color='#d4af37', size=8),
         name='今の運勢'
@@ -239,17 +257,17 @@ if predict_button:
 
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(visible=True, range=[0, 5], tickvals=[1, 2, 3, 4, 5], tickcolor="#cccccc", gridcolor="#e0e0e0"),
-            angularaxis=dict(gridcolor="#e0e0e0", tickfont=dict(size=12, color="#333333"))
+            radialaxis=dict(visible=True, range=[0, 5], tickvals=[1, 2, 3, 4, 5], tickcolor="#444", gridcolor="#333"),
+            angularaxis=dict(gridcolor="#333", tickfont=dict(size=13, color="#d4af37"))
         ),
         showlegend=True,
-        legend=dict(font=dict(color="#333333"), orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend=dict(font=dict(color="#eee"), orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=40, r=40, t=40, b=20)
     )
 
-    st.subheader("🌟 あなたの真の運命チャート")
+    st.subheader("🌌 波動解析チャート")
     st.plotly_chart(fig, use_container_width=True)
     
     # --- テキスト出力 ＆ 詳細解説表示 ---
@@ -257,18 +275,17 @@ if predict_button:
     final_max_val = max(scores_now.values())
 
     if final_max_val > 0:
-        st.markdown("---")
+        st.markdown("<hr style='border-color: #333;'>", unsafe_allow_html=True)
         
         base_top_traits = [fortune_map[k] for k, v in scores_base.items() if v == base_max_val]
         final_top_traits = [fortune_map[k] for k, v in scores_now.items() if v == final_max_val]
         
-        # 小数第二位まで表示して、有機的な数値であることをアピール
-        st.info(f"**👑 【生来の最大の武器】** {' / '.join(base_top_traits)} （ベース: {base_max_val:.2f}）")
-        st.success(f"**🎯 【今の最強ステータス】** {' / '.join(final_top_traits)} （現在: {final_max_val:.2f} / 5.00）")
+        st.markdown(f"<h4 style='color: #888;'>👁️ 生来の最大の武器：{' / '.join(base_top_traits)} <span style='font-size:0.8em'>({base_max_val:.2f})</span></h4>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color: #d4af37;'>👑 現在の最強ステータス：{' / '.join(final_top_traits)} <span style='font-size:0.8em'>({final_max_val:.2f} / 5.00)</span></h3>", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("📜 全パラメータ詳細解析")
-        st.write("あなたの持つすべての宿命要素と、いまこの瞬間の星回りによる状態を解説します。（現在のスコアが高い順）")
+        st.subheader("📜 運命の深淵解析")
+        st.write("あなたの持つすべての宿命要素と、いまこの瞬間の星回りによる状態を紐解きます。（現在のスコアが高い順）")
 
         sorted_keys = sorted(scores_now.keys(), key=lambda x: scores_now[x], reverse=True)
 
@@ -281,11 +298,11 @@ if predict_button:
             f_text = trait_details[k]['today_high'] if f_score >= 3.0 else trait_details[k]['today_low']
             
             with st.expander(f"■ {trait_name} （本来: {b_score:.2f} ➔ 現在: {f_score:.2f}）"):
-                st.markdown(f"<div class='detail-label'>本来の宿命（ベーススコア: {b_score:.2f}）</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-label'>本来の宿命（ベース: {b_score:.2f}）</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='detail-text'>{b_text}</div>", unsafe_allow_html=True)
                 
-                st.markdown(f"<div class='detail-label-today'>今の運勢（最終スコア: {f_score:.2f}）</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='detail-label-today'>現在の運勢（最終: {f_score:.2f}）</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='detail-text'>{f_text}</div>", unsafe_allow_html=True)
 
     else:
-        st.warning("⚠️ スコアが算出できませんでした。入力情報を確認してください。")
+        st.error("⚠️ 波動の読み取りに失敗しました。入力情報を確認してください。")
