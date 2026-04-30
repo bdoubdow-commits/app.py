@@ -7,7 +7,7 @@ import hashlib
 from collections import Counter
 
 # --- ページ設定 ---
-st.set_page_config(page_title="RESONANCE - 絶対宿命律 - - 運命波動解析", page_icon="🔮", layout="centered")
+st.set_page_config(page_title="RESONANCE - 絶対宿命律 -", page_icon="🔮", layout="centered")
 
 # --- 1. 画数・変換データ＆解説テキスト（預言者スタイル） ---
 alphabet_strokes = {
