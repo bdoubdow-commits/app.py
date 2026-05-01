@@ -8,13 +8,12 @@ from collections import Counter
 # --- ページ設定 ---
 st.set_page_config(page_title="RESONANCE - 絶対宿命律 -", page_icon="🔮", layout="centered")
 
-# --- 1. 画数辞書 ---
+# --- 1. 定数・辞書 ---
 alphabet_strokes = {'A': '3', 'B': '2', 'C': '1', 'D': '2', 'E': '4', 'F': '3', 'G': '1', 'H': '3', 'I': '1', 'J': '2', 'K': '3', 'L': '2', 'M': '4', 'N': '3', 'O': '1', 'P': '2', 'Q': '2', 'R': '3', 'S': '1', 'T': '2', 'U': '1', 'V': '2', 'W': '4', 'X': '2', 'Y': '3', 'Z': '3'}
 hiragana_strokes = {'あ': '3', 'い': '2', 'う': '2', 'え': '2', 'お': '3', 'か': '3', 'き': '4', 'く': '1', 'け': '3', 'こ': '2', 'さ': '3', 'し': '1', 'す': '3', 'せ': '3', 'そ': '3', 'た': '4', 'ち': '2', 'つ': '1', 'て': '1', 'と': '2', 'な': '4', 'に': '3', 'ぬ': '3', 'ね': '4', 'の': '1', 'は': '4', 'ひ': '2', 'ふ': '4', 'へ': '1', 'ほ': '5', 'ま': '3', 'み': '2', 'む': '3', 'め': '2', 'も': '3', 'や': '3', 'ゆ': '2', 'よ': '2', 'ら': '2', 'り': '2', 'る': '2', 'れ': '2', 'ろ': '1', 'わ': '2', 'を': '3', 'ん': '1'}
 blood_type_strokes = {"A型": "3", "B型": "2", "O型": "1", "AB型": "32"}
 fortune_map = {'0': '潜在・逆転', '1': '勝負・独立', '2': '恋愛・対人', '3': '人気・表現', '4': '健康・安定', '5': '行動・変化', '6': '家庭・愛情', '7': '分析・投資', '8': '金運・成功', '9': 'カリスマ'}
 
-# --- 預言者テキスト（重要ワードを<span>で強調可能に） ---
 trait_details = {
     '0': {
         'base_high': '【本質】あなたは逆境を喰らい、運命を反転させる<span style="color:#d4af37">特異点</span>の星の元に生まれました。<br>【深掘り】光の当たる表舞台よりも、深淵からすべてを操るフィクサーとしての才脈が脈打っています。絶望的な状況に陥るほど、あなたの真の力は覚醒するでしょう。',
@@ -24,7 +23,7 @@ trait_details = {
     },
     '1': {
         'base_high': '【本質】誰にも依存せず、自らの力で荒野を切り開く<span style="color:#d4af37">孤高の王</span>の気質です。<br>【深掘り】他者のルールに従うのではなく、あなたがルールとなるのです。圧倒的な実力で頂点に立つ運命を与えられています。',
-        'base_low': '【本質】決断の淵に立たされた時、他者の波動に共鳴しすぎる傾向があります。<br>【深掘り】自らの真なる声よりも、周囲との調和を優先してしまうため、勝負所で身を引いてしまうことが多いでしょう。それは優しさでもあり、弱さでもあります。',
+        'base_low': '【本質】決断の淵に立たされた時、他者の波動に共鳴しすぎる傾向があります。<br>【深掘り】自らの真なる声よりも、周囲との調和を優先してしまうため、勝負所で身を引いてしまうことが多いでしょう。',
         'today_high': '【波動解析】直感の刃が極限まで研ぎ澄まされた絶対的な波形です。<br>【深掘り】誰かに意見を求める行為は、かえって運気を濁らせます。内なる直感こそが、今日最も正確なコンパスとなります。<br>【本日の指針】他者の声を聞く必要はありません。<span style="color:#d4af37">即断即決</span>で道を開きなさい。',
         'today_low': '【波動解析】勝負の波が乱れ、行動が裏目に出やすい星回りです。<br>【深掘り】一発逆転を狙うような野心的な行動は、運命の歪みを引き起こします。今は刃を隠し、力を蓄えるべき時。<br>【本日の指針】大きな決断は絶対に避け、<span style="color:#ff4b4b">確実な一歩</span>だけを刻みなさい。'
     },
@@ -36,7 +35,7 @@ trait_details = {
     },
     '3': {
         'base_high': '【本質】魂の輝きを外へ放ち、世界を魅了する表現者の星を宿しています。<br>【深掘り】あなたの放つ言葉やセンスは、他者の無意識に強烈な楔を打ち込みます。自然と人が集い、あなたを中心に世界が回るでしょう。',
-        'base_low': '【本質】自らの放つべき光を、内側の闇に閉じ込めてしまう傾向があります。<br>【深掘り】他者の評価を恐れるあまり、才能の片鱗を見せることを無意識に拒絶しています。本来受けるべき賞賛を得られない損な役回りに甘んじています。',
+        'base_low': '【本質】自らの放つすべき光を、内側の闇に閉じ込めてしまう傾向があります。<br>【深掘り】他者の評価を恐れるあまり、才能の片鱗を見せることを無意識に拒絶しています。本来受けるべき賞賛を得られない損な役回りに甘んじています。',
         'today_high': '【波動解析】表現のオーラが最大化し、周囲の視線を独占する波形です。<br>【深掘り】あなたの存在そのものが強いメッセージとなり、世界を揺るがします。内に秘めたアイデアは、今日<span style="color:#d4af37">解き放たれるため</span>にありました。<br>【本日の指針】決して隠れてはいけません。舞台の中央に立ちなさい。',
         'today_low': '【波動解析】自己主張の波が周囲と衝突し、反発を生む危険な兆候です。<br>【深掘り】良かれと思った行動が「自己中心的」と誤認され、無用な嫉妬や反感を買うでしょう。今日はあなたの光が強すぎるのです。<br>【本日の指針】黒子に徹し、他者を輝かせることにのみ力を注ぎなさい。'
     },
@@ -78,83 +77,23 @@ trait_details = {
     }
 }
 
-# --- 2. CSSリッチ化ハック ---
+# --- 2. CSSリッチ化（HTMLタグ内に封印） ---
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* 全体背景：深淵へのグラデーション */
 .stApp {
     background: linear-gradient(180deg, #050505 0%, #0a0a15 100%) !important;
     color: #e0e0e0 !important;
     font-family: 'Shippori Mincho', serif !important;
 }
-
-/* 高級フォントの適用 */
-h1, h2, h3, h4, p, span, div, .stButton {
-    font-family: 'Shippori Mincho', serif !important;
-}
-
-/* タイトル周辺の発光 */
-h1 { 
-    color: #d4af37 !important; 
-    text-align: center; 
-    font-size: 3em !important; 
-    text-shadow: 0 0 20px rgba(212,175,55,0.5); 
-    margin-bottom: 0px !important;
-}
-.sub-title { 
-    text-align: center; 
-    color: #a0a0a0; 
-    font-size: 1.2em; 
-    margin-bottom: 35px; 
-    letter-spacing: 0.2em; 
-}
-
-/* 警告文のリッチ化 */
-.once-notice { 
-    color: #ff4b4b; 
-    text-align: center; 
-    padding: 15px; 
-    border: 1px solid #441111; 
-    background: rgba(40, 5, 5, 0.5); 
-    border-radius: 8px;
-    box-shadow: inset 0 0 10px rgba(255,75,75,0.1);
-    margin-bottom: 30px;
-}
-
-/* 入力セクションの装飾 */
-.stTextInput input, .stDateInput input, .stSelectbox div {
-    background-color: #111 !important;
-    border: 1px solid #d4af3744 !important;
-    color: #d4af37 !important;
-}
-
-/* 黄金のボタン */
-.stButton>button {
-    background: linear-gradient(135deg, #8a6d3b 0%, #d4af37 50%, #8a6d3b 100%) !important;
-    color: #000 !important;
-    font-weight: bold !important;
-    border: none !important;
-    padding: 12px 0 !important;
-    box-shadow: 0 0 20px rgba(212,175,55,0.3) !important;
-    transition: 0.4s !important;
-}
-.stButton>button:hover {
-    box-shadow: 0 0 40px rgba(212,175,55,0.6) !important;
-    letter-spacing: 0.2em;
-}
-
-/* プログレスバーの装飾 */
-.stProgress > div > div > div > div {
-    background-color: #d4af37 !important;
-}
-
-/* 解析結果のカード */
-.stExpander {
-    background: rgba(20, 20, 25, 0.5) !important;
-    border: 1px solid #333 !important;
-    border-radius: 8px !important;
-}
+h1 { color: #d4af37 !important; text-align: center; font-size: 3em !important; text-shadow: 0 0 20px rgba(212,175,55,0.5); margin-bottom: 0px !important;}
+.sub-title { text-align: center; color: #a0a0a0; font-size: 1.2em; margin-bottom: 35px; letter-spacing: 0.2em; }
+.once-notice { color: #ff4b4b; text-align: center; padding: 15px; border: 1px solid #441111; background: rgba(40, 5, 5, 0.5); border-radius: 8px; margin-bottom: 30px;}
+.stTextInput input, .stDateInput input, .stSelectbox div { background-color: #111 !important; border: 1px solid #d4af3744 !important; color: #d4af37 !important; }
+.stButton>button { background: linear-gradient(135deg, #8a6d3b 0%, #d4af37 50%, #8a6d3b 100%) !important; color: #000 !important; font-weight: bold !important; border: none !important; width: 100%; padding: 12px 0 !important; box-shadow: 0 0 20px rgba(212,175,55,0.3) !important; transition: 0.4s !important; }
+.stButton>button:hover { box-shadow: 0 0 40px rgba(212,175,55,0.6) !important; letter-spacing: 0.2em;}
+.stProgress > div > div > div > div { background-color: #d4af37 !important; }
+.detail-text { color: #cccccc; font-size: 0.95em; line-height: 1.8; padding-bottom: 15px; }
 .detail-label { color: #d4af37; font-weight: bold; border-left: 3px solid #d4af37; padding-left: 12px; margin-bottom: 8px; margin-top: 15px;}
 .detail-label-today { color: #a0c4ff; font-weight: bold; border-left: 3px solid #a0c4ff; padding-left: 12px; margin-bottom: 8px; margin-top: 20px;}
 </style>
@@ -175,7 +114,7 @@ with st.container():
         last_name_alpha = st.text_input("姓（ローマ字）", placeholder="例：YAMADA")
         first_name_alpha = st.text_input("名（ローマ字）", placeholder="例：TARO")
 
-    dob = st.date_input("生誕の日", min_value=datetime.date(1900, 1, 1), value=datetime.date(2000, 1, 1))
+    dob = st.date_input("生誕の日", min_value=datetime.date(1900, 1, 1), value=datetime.date(1983, 12, 26))
 
     st.subheader("【運命の深淵パラメータ】")
     col3, col4 = st.columns(2)
@@ -197,32 +136,25 @@ def get_numeric_value(text, stroke_dict):
             s += str(ord(char))
     return int(s) if s else 0
 
-# --- 4. 解析・演出ロジック ---
+# --- 4. 解析・演出 ---
 if predict_button:
-    # --- 演出：「溜め」のプログレスバー ---
     status_text = st.empty()
     progress_bar = st.progress(0)
     messages = ["深淵の記憶を照合中...", "星の配置を再構成中...", "運命の糸を紡いでいます...", "絶対宿命律と同期完了。"]
-    
     for i in range(100):
-        time.sleep(0.03) # 合計約3秒の溜め
+        time.sleep(0.02)
         progress_bar.progress(i + 1)
         if i < 30: status_text.markdown(f"<p style='text-align:center;'>{messages[0]}</p>", unsafe_allow_html=True)
         elif i < 60: status_text.markdown(f"<p style='text-align:center;'>{messages[1]}</p>", unsafe_allow_html=True)
         elif i < 90: status_text.markdown(f"<p style='text-align:center;'>{messages[2]}</p>", unsafe_allow_html=True)
         else: status_text.markdown(f"<p style='text-align:center;'>{messages[3]}</p>", unsafe_allow_html=True)
-    
-    time.sleep(0.5)
-    status_text.empty()
-    progress_bar.empty()
+    time.sleep(0.5); status_text.empty(); progress_bar.empty()
 
-    # --- コアロジック ---
     JST = datetime.timezone(datetime.timedelta(hours=+9), 'JST')
     now = datetime.datetime.now(JST)
 
-    # 1. ベース計算
-    year = dob.year
-    month_day = int(dob.strftime('%m%d'))
+    # ロジック復旧
+    year, month_day = dob.year, int(dob.strftime('%m%d'))
     val_dob = abs(year - month_day)
     val_kanji = abs(get_numeric_value(last_name, hiragana_strokes) - get_numeric_value(first_name, hiragana_strokes))
     val_alpha = abs(get_numeric_value(first_name_alpha, alphabet_strokes) - get_numeric_value(last_name_alpha, alphabet_strokes))
@@ -231,59 +163,47 @@ if predict_button:
 
     raw_scores_base = {}
     for i in range(10):
-        digit = str(i)
-        seed = f"{hash_base}_base_{i}"
-        noise = (int(hashlib.md5(seed.encode()).hexdigest()[:8], 16) % 100) / 100.0
-        raw_scores_base[digit] = counts_base.get(digit, 0) + noise
-    max_raw_base = max(raw_scores_base.values()) if max(raw_scores_base.values()) > 0 else 1.0
-    scores_base = {k: (v / max_raw_base) * 5.0 * min(max_raw_base / 3.0, 1.0) for k, v in raw_scores_base.items()}
+        d = str(i)
+        noise = (int(hashlib.md5(f"{hash_base}_b_{i}".encode()).hexdigest()[:8], 16) % 100) / 100.0
+        raw_scores_base[d] = counts_base.get(d, 0) + noise
+    m_b = max(raw_scores_base.values()) if max(raw_scores_base.values()) > 0 else 1.0
+    scores_base = {k: (v / m_b) * 5.0 * min(m_b / 3.0, 1.0) for k, v in raw_scores_base.items()}
 
-    # 2. 現在計算
     hash_now = hash_base + now.strftime('%Y%m%d%H%M')
     counts_now = Counter(hash_now)
     raw_scores_now = {}
     for i in range(10):
-        digit = str(i)
-        seed = f"{hash_now}_now_{i}"
-        noise = (int(hashlib.md5(seed.encode()).hexdigest()[:8], 16) % 100) / 100.0
-        raw_scores_now[digit] = counts_now.get(digit, 0) + noise
-    max_raw_now = max(raw_scores_now.values()) if max(raw_scores_now.values()) > 0 else 1.0
-    scores_now = {k: (v / max_raw_now) * 5.0 * min(max_raw_now / 4.0, 1.0) for k, v in raw_scores_now.items()}
+        d = str(i)
+        noise = (int(hashlib.md5(f"{hash_now}_n_{i}".encode()).hexdigest()[:8], 16) % 100) / 100.0
+        raw_scores_now[d] = counts_now.get(d, 0) + noise
+    m_n = max(raw_scores_now.values()) if max(raw_scores_now.values()) > 0 else 1.0
+    scores_now = {k: (v / m_n) * 5.0 * min(m_n / 4.0, 1.0) for k, v in raw_scores_now.items()}
 
-    # 3. デバフ
-    time_str = "" if time_unknown else tob.strftime('%H%M')
-    blood_str = "" if blood_type.startswith("不明") else blood_type_strokes.get(blood_type, "")
+    # デバフ
+    t_s = "" if time_unknown else tob.strftime('%H%M')
+    b_s_code = "" if blood_type.startswith("不明") else blood_type_strokes.get(blood_type, "")
     for i in range(10):
         d = str(i)
-        p = 0.5 if (time_unknown or d in time_str) else 0.0
-        p += 0.5 if (blood_type.startswith("不明") or d in blood_str) else 0.0
+        p = 0.5 if (time_unknown or d in t_s) else 0.0
+        p += 0.5 if (blood_type.startswith("不明") or d in b_s_code) else 0.0
         scores_base[d] = max(0.0, scores_base[d] - p)
         scores_now[d] = max(0.0, scores_now[d] - p)
 
-    # --- グラフ表示 ---
+    # グラフ
     labels = [fortune_map[str(i)] for i in range(10)]
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(r=[scores_base[str(i)] for i in range(10)] + [scores_base['0']], theta=labels + [labels[0]], fill='none', line=dict(color='#444', width=1.5, dash='dot'), name='本来の宿命'))
     fig.add_trace(go.Scatterpolar(r=[scores_now[str(i)] for i in range(10)] + [scores_now['0']], theta=labels + [labels[0]], fill='toself', fillcolor='rgba(212, 175, 55, 0.2)', line=dict(color='#d4af37', width=2.5), marker=dict(color='#d4af37', size=10), name='今の運勢'))
-    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 5], tickvals=[1,2,3,4,5], tickcolor="#333", gridcolor="#222"), angularaxis=dict(gridcolor="#222", tickfont=dict(size=14, color="#d4af37"))), showlegend=True, legend=dict(font=dict(color="#eee")), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=60, r=60, t=40, b=40))
-    
+    fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 5], tickvals=[1,2,3,4,5], tickcolor="#333", gridcolor="#222"), angularaxis=dict(gridcolor="#222", tickfont=dict(size=14, color="#d4af37"))), showlegend=True, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", margin=dict(l=60, r=60, t=40, b=40))
     st.plotly_chart(fig, use_container_width=True)
 
-    # --- 詳細解析表示 ---
+    # 解析結果
     st.markdown("<hr style='border-color: #333;'>", unsafe_allow_html=True)
-    base_max = max(scores_base.values())
-    final_max = max(scores_now.values())
-    b_tops = [fortune_map[k] for k, v in scores_base.items() if v == base_max]
-    f_tops = [fortune_map[k] for k, v in scores_now.items() if v == final_max]
-    
-    st.markdown(f"<h4 style='color: #888; text-align:center;'>👁️ 生来の最大の武器：{' / '.join(b_tops)} ({base_max:.2f})</h4>", unsafe_allow_html=True)
-    st.markdown(f"<h2 style='color: #d4af37; text-align:center; text-shadow: 0 0 10px #d4af3744;'>👑 現在の最強ステータス：{' / '.join(f_tops)} ({final_max:.2f})</h2>", unsafe_allow_html=True)
+    b_max, f_max = max(scores_base.values()), max(scores_now.values())
+    st.markdown(f"<h4 style='color: #888; text-align:center;'>👁️ 生来の最大の武器：{' / '.join([fortune_map[k] for k, v in scores_base.items() if v == b_max])} ({b_max:.2f})</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='color: #d4af37; text-align:center;'>👑 現在の最強ステータス：{' / '.join([fortune_map[k] for k, v in scores_now.items() if v == f_max])} ({f_max:.2f})</h2>", unsafe_allow_html=True)
 
-    sorted_keys = sorted(scores_now.keys(), key=lambda x: scores_now[x], reverse=True)
-    for k in sorted_keys:
-        b_s, f_s = scores_base[k], scores_now[k]
-        b_t = trait_details[k]['base_high'] if b_s >= 3.0 else trait_details[k]['base_low']
-        f_t = trait_details[k]['today_high'] if f_s >= 3.0 else trait_details[k]['today_low']
-        with st.expander(f"■ {fortune_map[k]} （本来: {b_s:.2f} ➔ 現在: {f_s:.2f}）"):
-            st.markdown(f"<div class='detail-label'>本来の宿命</div><div class='detail-text'>{b_t}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='detail-label-today'>現在の運勢</div><div class='detail-text'>{f_t}</div>", unsafe_allow_html=True)
+    for k in sorted(scores_now.keys(), key=lambda x: scores_now[x], reverse=True):
+        with st.expander(f"■ {fortune_map[k]} （本来: {scores_base[k]:.2f} ➔ 現在: {scores_now[k]:.2f}）"):
+            st.markdown(f"<div class='detail-label'>本来の宿命</div><div class='detail-text'>{trait_details[k]['base_high'] if scores_base[k]>=3.0 else trait_details[k]['base_low']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='detail-label-today'>現在の運勢</div><div class='detail-text'>{trait_details[k]['today_high'] if scores_now[k]>=3.0 else trait_details[k]['today_low']}</div>", unsafe_allow_html=True)
