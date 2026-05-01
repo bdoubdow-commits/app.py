@@ -8,7 +8,7 @@ from collections import Counter
 # --- ページ設定 ---
 st.set_page_config(page_title="RESONANCE - 絶対宿命律 -", page_icon="🔮", layout="centered")
 
-# --- 1. 定数・辞書（完全版・省略一切なし） ---
+# --- 1. 定数・辞書 ---
 alphabet_strokes = {'A': '3', 'B': '2', 'C': '1', 'D': '2', 'E': '4', 'F': '3', 'G': '1', 'H': '3', 'I': '1', 'J': '2', 'K': '3', 'L': '2', 'M': '4', 'N': '3', 'O': '1', 'P': '2', 'Q': '2', 'R': '3', 'S': '1', 'T': '2', 'U': '1', 'V': '2', 'W': '4', 'X': '2', 'Y': '3', 'Z': '3'}
 hiragana_strokes = {'あ': '3', 'い': '2', 'う': '2', 'え': '2', 'お': '3', 'か': '3', 'き': '4', 'く': '1', 'け': '3', 'こ': '2', 'さ': '3', 'し': '1', 'す': '3', 'せ': '3', 'そ': '3', 'た': '4', 'ち': '2', 'つ': '1', 'て': '1', 'と': '2', 'な': '4', 'に': '3', 'ぬ': '3', 'ね': '4', 'の': '1', 'は': '4', 'ひ': '2', 'ふ': '4', 'へ': '1', 'ほ': '5', 'ま': '3', 'み': '2', 'む': '3', 'め': '2', 'も': '3', 'や': '3', 'ゆ': '2', 'よ': '2', 'ら': '2', 'り': '2', 'る': '2', 'れ': '2', 'ろ': '1', 'わ': '2', 'を': '3', 'ん': '1'}
 blood_type_strokes = {"A型": "3", "B型": "2", "O型": "1", "AB型": "32"}
@@ -77,7 +77,7 @@ trait_details = {
     }
 }
 
-# --- 2. CSS & デザイン（黄金・漆黒・高級） ---
+# --- 2. CSS & デザイン ---
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -138,7 +138,7 @@ st.markdown("<h1 class='main-title'>RESONANCE</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-title'>- 絶対宿命律 -<br>隠されたあなたの本質を炙り出す</p>", unsafe_allow_html=True)
 st.markdown('<div class="once-notice">⚠️ 1日1度、1回目の判定のみが真実です。</div>', unsafe_allow_html=True)
 
-# --- 3. UI（生年月日と時刻の修正） ---
+# --- 3. UI構築 ---
 with st.container():
     st.subheader("【魂の基本情報】")
     col1, col2 = st.columns(2)
@@ -149,14 +149,12 @@ with st.container():
         last_name_alpha = st.text_input("姓（ローマ字）", placeholder="例：YAMADA")
         first_name_alpha = st.text_input("名（ローマ字）", placeholder="例：TARO")
 
-    # 生年月日の範囲制限を完全に解放 (1900年〜今日)
     dob = st.date_input("生誕の日", value=datetime.date(2000, 1, 1), min_value=datetime.date(1900, 1, 1), max_value=datetime.date.today())
 
     st.subheader("【運命の深淵パラメータ】")
     col3, col4 = st.columns(2)
     with col3:
         time_unknown = st.checkbox("時刻不明")
-        # step=60 で 1分刻みに修正
         tob = st.time_input("生誕時刻", value=datetime.time(12, 0), step=60, disabled=time_unknown)
     with col4:
         blood_type = st.selectbox("血の盟約", ["A型", "B型", "O型", "AB型", "不明"], index=4)
@@ -171,25 +169,42 @@ def get_numeric_value(text, stroke_dict):
 # --- 5. 解析実行 ---
 if predict_button:
     p_bar = st.progress(0)
+    status_text = st.empty()
+    messages = ["深淵の記憶を照合中...", "星の配置を再構成中...", "絶対宿命律と同期中..."]
     for i in range(100):
         time.sleep(0.015)
         p_bar.progress(i + 1)
-    p_bar.empty()
+        if i % 33 == 0: status_text.markdown(f"<p style='text-align:center;'>{messages[i//34]}</p>", unsafe_allow_html=True)
+    p_bar.empty(); status_text.empty()
 
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=+9)))
     
     # ハッシュ生成ロジック
     year, md = dob.year, int(dob.strftime('%m%d'))
+    # ベースの数字（文字列）
     v_base_str = f"{abs(year-md)}{abs(get_numeric_value(last_name, hiragana_strokes)-get_numeric_value(first_name, hiragana_strokes))}"
+    if not v_base_str:
+        v_base_str = "1" # エラー回避
+
+    # 今の時間の数字（文字列）
+    time_num_str = now.strftime('%Y%m%d%H%M')
+    
+    # 宿命と今の時間を「掛け算」して、完全に新しい15〜17桁の数字（化学反応）を生み出す！
+    reaction_str = str(int(v_base_str) * int(time_num_str))
     
     def calc_scores(h_str, salt):
         c = Counter(h_str)
-        raw = {str(i): c.get(str(i), 0) + (int(hashlib.md5(f"{h_str}_{salt}_{i}".encode()).hexdigest()[:8], 16)%100)/100.0 for i in range(10)}
+        raw = {}
+        for i in range(10):
+            d = str(i)
+            noise = (int(hashlib.md5(f"{h_str}_{salt}_{i}".encode()).hexdigest()[:8], 16)%100)/100.0
+            raw[d] = c.get(d, 0) + noise
         mx = max(raw.values()) if max(raw.values()) > 0 else 1.0
         return {k: (v/mx)*5.0 for k, v in raw.items()}
 
+    # ベースはそのままの数字、本日は「掛け算された化学反応の数字」で波形を作る
     sc_base = calc_scores(v_base_str, "base")
-    sc_today = calc_scores(v_base_str + now.strftime('%Y%m%d%H%M'), "today")
+    sc_today = calc_scores(reaction_str, "today")
 
     # グラフ表示
     labels = [fortune_map[str(i)] for i in range(10)]
