@@ -221,7 +221,6 @@ if predict_button:
     st.markdown("<hr style='border-color:#333; margin: 40px 0;'>", unsafe_allow_html=True)
     st.markdown("<h2 style='color:#d4af37; text-align:center; text-shadow: 0 0 10px rgba(212,175,55,0.4); margin-bottom: 30px;'>👑 本日の運命ランキング</h2>", unsafe_allow_html=True)
 
-    # メダルと枠線の色設定
     medals = ["🥇", "🥈", "🥉", "４位 ✧", "５位 ✧", "６位 ✧", "７位 ✧", "８位 ✧", "９位 ✧", "10位 ✧"]
     border_colors = ["#d4af37", "#c0c0c0", "#cd7f32"] + ["#333333"] * 7
     
@@ -233,17 +232,18 @@ if predict_button:
         t_score = sc_today[k]
         border_color = border_colors[i]
         
-        # 1〜3位は少し文字を大きく・輝かせる
         title_style = f"color: {border_color}; margin-top: 0; font-size: {'1.5em' if i < 3 else '1.2em'};"
         
-        st.markdown(f"""
-        <div class='ranking-card' style='border: 1px solid {border_color};'>
-            <h3 style='{title_style}'>{medal} {fortune_map[k]} <span style='font-size:0.6em; color:#aaa; font-weight:normal;'>(本来: {b_score:.2f} ➔ 本日: {t_score:.2f})</span></h3>
-            
-            <div class='detail-label'>本来の宿命</div>
-            <div class='detail-text'>{trait_details[k]['base_high'] if b_score>=3.0 else trait_details[k]['base_low']}</div>
-            
-            <div class='detail-label-today'>本日の運勢</div>
-            <div class='detail-text'>{trait_details[k]['today_high'] if t_score>=3.0 else trait_details[k]['today_low']}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        b_text = trait_details[k]['base_high'] if b_score >= 3.0 else trait_details[k]['base_low']
+        t_text = trait_details[k]['today_high'] if t_score >= 3.0 else trait_details[k]['today_low']
+        
+        # NOTE: 先頭のスペース(インデント)をなくすことで、Markdownのコードブロックとして誤認されるのを防ぎます！
+        card_html = f"""<div class='ranking-card' style='border: 1px solid {border_color};'>
+<h3 style='{title_style}'>{medal} {fortune_map[k]} <span style='font-size:0.6em; color:#aaa; font-weight:normal;'>(本来: {b_score:.2f} ➔ 本日: {t_score:.2f})</span></h3>
+<div class='detail-label'>本来の宿命</div>
+<div class='detail-text'>{b_text}</div>
+<div class='detail-label-today'>本日の運勢</div>
+<div class='detail-text'>{t_text}</div>
+</div>"""
+
+        st.markdown(card_html, unsafe_allow_html=True)
