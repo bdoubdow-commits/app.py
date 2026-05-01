@@ -128,9 +128,17 @@ st.markdown("""
 .stProgress > div > div > div > div {
     background-color: #d4af37 !important;
 }
-.detail-text { color: #cccccc; font-size: 0.95em; line-height: 1.8; padding-bottom: 15px; }
+/* ランキング用のカードデザイン追加 */
+.ranking-card {
+    background: rgba(20,20,25,0.8);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+.detail-text { color: #cccccc; font-size: 0.95em; line-height: 1.8; padding-bottom: 10px; }
 .detail-label { color: #d4af37; font-weight: bold; border-left: 3px solid #d4af37; padding-left: 12px; margin-bottom: 8px; margin-top: 15px;}
-.detail-label-today { color: #a0c4ff; font-weight: bold; border-left: 3px solid #a0c4ff; padding-left: 12px; margin-bottom: 8px; margin-top: 20px;}
+.detail-label-today { color: #a0c4ff; font-weight: bold; border-left: 3px solid #a0c4ff; padding-left: 12px; margin-bottom: 8px; margin-top: 15px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -181,15 +189,11 @@ if predict_button:
     
     # ハッシュ生成ロジック
     year, md = dob.year, int(dob.strftime('%m%d'))
-    # ベースの数字（文字列）
     v_base_str = f"{abs(year-md)}{abs(get_numeric_value(last_name, hiragana_strokes)-get_numeric_value(first_name, hiragana_strokes))}"
     if not v_base_str:
-        v_base_str = "1" # エラー回避
+        v_base_str = "1"
 
-    # 今の時間の数字（文字列）
     time_num_str = now.strftime('%Y%m%d%H%M')
-    
-    # 宿命と今の時間を「掛け算」して、完全に新しい15〜17桁の数字（化学反応）を生み出す！
     reaction_str = str(int(v_base_str) * int(time_num_str))
     
     def calc_scores(h_str, salt):
@@ -202,7 +206,6 @@ if predict_button:
         mx = max(raw.values()) if max(raw.values()) > 0 else 1.0
         return {k: (v/mx)*5.0 for k, v in raw.items()}
 
-    # ベースはそのままの数字、本日は「掛け算された化学反応の数字」で波形を作る
     sc_base = calc_scores(v_base_str, "base")
     sc_today = calc_scores(reaction_str, "today")
 
@@ -214,12 +217,33 @@ if predict_button:
     fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 5], tickcolor="#444", gridcolor="#222"), angularaxis=dict(gridcolor="#222", tickfont=dict(color="#d4af37"))), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig, use_container_width=True)
 
-    # 最終結果
-    st.markdown("<hr style='border-color:#333;'>", unsafe_allow_html=True)
-    f_max = max(sc_today.values())
-    st.markdown(f"<h2 style='color:#d4af37; text-align:center;'>👑 本日の最強ステータス：{' / '.join([fortune_map[k] for k,v in sc_today.items() if v == f_max])} ({f_max:.2f})</h2>", unsafe_allow_html=True)
+    # ランキングUI構築
+    st.markdown("<hr style='border-color:#333; margin: 40px 0;'>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color:#d4af37; text-align:center; text-shadow: 0 0 10px rgba(212,175,55,0.4); margin-bottom: 30px;'>👑 本日の運命ランキング</h2>", unsafe_allow_html=True)
 
-    for k in sorted(sc_today.keys(), key=lambda x: sc_today[x], reverse=True):
-        with st.expander(f"■ {fortune_map[k]} （本来: {sc_base[k]:.2f} ➔ 本日: {sc_today[k]:.2f}）"):
-            st.markdown(f"<div class='detail-label'>本来の宿命</div><div class='detail-text'>{trait_details[k]['base_high'] if sc_base[k]>=3.0 else trait_details[k]['base_low']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='detail-label-today'>本日の運勢</div><div class='detail-text'>{trait_details[k]['today_high'] if sc_today[k]>=3.0 else trait_details[k]['today_low']}</div>", unsafe_allow_html=True)
+    # メダルと枠線の色設定
+    medals = ["🥇", "🥈", "🥉", "４位 ✧", "５位 ✧", "６位 ✧", "７位 ✧", "８位 ✧", "９位 ✧", "10位 ✧"]
+    border_colors = ["#d4af37", "#c0c0c0", "#cd7f32"] + ["#333333"] * 7
+    
+    sorted_keys = sorted(sc_today.keys(), key=lambda x: sc_today[x], reverse=True)
+    
+    for i, k in enumerate(sorted_keys):
+        medal = medals[i]
+        b_score = sc_base[k]
+        t_score = sc_today[k]
+        border_color = border_colors[i]
+        
+        # 1〜3位は少し文字を大きく・輝かせる
+        title_style = f"color: {border_color}; margin-top: 0; font-size: {'1.5em' if i < 3 else '1.2em'};"
+        
+        st.markdown(f"""
+        <div class='ranking-card' style='border: 1px solid {border_color};'>
+            <h3 style='{title_style}'>{medal} {fortune_map[k]} <span style='font-size:0.6em; color:#aaa; font-weight:normal;'>(本来: {b_score:.2f} ➔ 本日: {t_score:.2f})</span></h3>
+            
+            <div class='detail-label'>本来の宿命</div>
+            <div class='detail-text'>{trait_details[k]['base_high'] if b_score>=3.0 else trait_details[k]['base_low']}</div>
+            
+            <div class='detail-label-today'>本日の運勢</div>
+            <div class='detail-text'>{trait_details[k]['today_high'] if t_score>=3.0 else trait_details[k]['today_low']}</div>
+        </div>
+        """, unsafe_allow_html=True)
